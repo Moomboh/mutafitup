@@ -13,8 +13,6 @@ env:
 
 jobs:
   build:
-    # TODO: remove 'if: false' to enable this workflow once ready
-    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -64,7 +62,7 @@ jobs:
 
       - name: Install Dioxus CLI
         uses: cargo-bins/cargo-binstall@main
-      - run: cargo binstall dioxus-cli@0.7.1 --no-confirm
+      - run: cargo binstall dioxus-cli@0.7.3 --no-confirm --force
 
       - name: Build desktop app
         run: >-
@@ -83,12 +81,11 @@ jobs:
             echo "path=app/target/dx/mutafitup-app/release/macos" >> "$GITHUB_OUTPUT"
             echo "bundle=MutafitupApp.app" >> "$GITHUB_OUTPUT"
           elif [ "${{ runner.os }}" = "Linux" ]; then
-            # On Linux, dx build produces a binary in the target dir
             echo "path=app/target/dx/mutafitup-app/release/linux" >> "$GITHUB_OUTPUT"
-            echo "bundle=mutafitup-app" >> "$GITHUB_OUTPUT"
+            echo "bundle=app" >> "$GITHUB_OUTPUT"
           elif [ "${{ runner.os }}" = "Windows" ]; then
             echo "path=app/target/dx/mutafitup-app/release/windows" >> "$GITHUB_OUTPUT"
-            echo "bundle=mutafitup-app.exe" >> "$GITHUB_OUTPUT"
+            echo "bundle=app" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Package archive (tar.gz)
@@ -99,6 +96,8 @@ jobs:
           dir="${{ matrix.artifact }}-${tag}"
           mkdir -p "$dir"
           cp -r "${{ steps.output.outputs.path }}/${{ steps.output.outputs.bundle }}" "$dir/"
+          cp LICENSE.md NOTICE "$dir/"
+          cp -r THIRD_PARTY_LICENSES "$dir/"
           tar czf "${{ matrix.artifact }}-${tag}.tar.gz" "$dir"
           echo "ARCHIVE=${{ matrix.artifact }}-${tag}.tar.gz" >> "$GITHUB_ENV"
 
@@ -110,6 +109,8 @@ jobs:
           dir="${{ matrix.artifact }}-${tag}"
           mkdir -p "$dir"
           cp -r "${{ steps.output.outputs.path }}/${{ steps.output.outputs.bundle }}" "$dir/"
+          cp LICENSE.md NOTICE "$dir/"
+          cp -r THIRD_PARTY_LICENSES "$dir/"
           7z a "${{ matrix.artifact }}-${tag}.zip" "$dir"
           echo "ARCHIVE=${{ matrix.artifact }}-${tag}.zip" >> "$GITHUB_ENV"
 
@@ -122,8 +123,6 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-    # TODO: remove 'if: false' to enable this workflow once ready
-    if: false
     steps:
       - uses: actions/download-artifact@v4
         with:

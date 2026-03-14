@@ -3,7 +3,6 @@
 /// Accepts either FASTA-formatted text (one or more records starting
 /// with `>`) or a plain amino-acid sequence. Multi-line sequences are
 /// concatenated and whitespace is stripped.
-use needletail::parse_fastx_reader;
 
 /// A single parsed sequence with an optional FASTA header.
 #[derive(Debug, Clone, PartialEq)]
@@ -38,30 +37,33 @@ pub fn parse_input(text: &str) -> Vec<ParsedSequence> {
 
 fn parse_fasta(text: &str) -> Vec<ParsedSequence> {
     let mut records = Vec::new();
+    let mut header: Option<String> = None;
+    let mut seq_buf = String::new();
 
-    let mut reader = match parse_fastx_reader(text.as_bytes()) {
-        Ok(r) => r,
-        Err(_) => return Vec::new(),
-    };
-
-    while let Some(result) = reader.next() {
-        let record = match result {
-            Ok(r) => r,
-            Err(_) => continue,
-        };
-
-        // id() returns the full header line after `>` (trimmed of \r)
-        let header = std::str::from_utf8(record.id()).ok().map(String::from);
-
-        // seq() returns the sequence with newlines stripped
-        let seq = record.seq();
-        let sequence = std::str::from_utf8(&seq)
-            .map(strip_whitespace)
-            .unwrap_or_default();
-
-        if !sequence.is_empty() {
-            records.push(ParsedSequence { header, sequence });
+    for line in text.lines() {
+        let line = line.trim_end_matches('\r');
+        if let Some(hdr) = line.strip_prefix('>') {
+            // Flush previous record
+            if header.is_some() || !seq_buf.is_empty() {
+                let sequence = strip_whitespace(&seq_buf);
+                if !sequence.is_empty() {
+                    records.push(ParsedSequence {
+                        header: header.take(),
+                        sequence,
+                    });
+                }
+                seq_buf.clear();
+            }
+            header = Some(hdr.to_string());
+        } else {
+            seq_buf.push_str(line);
         }
+    }
+
+    // Flush last record
+    let sequence = strip_whitespace(&seq_buf);
+    if !sequence.is_empty() {
+        records.push(ParsedSequence { header, sequence });
     }
 
     records

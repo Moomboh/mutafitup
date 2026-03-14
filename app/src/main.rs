@@ -104,6 +104,8 @@ use sequence_list::{
 /// Task label metadata embedded at compile time.
 const TASK_LABELS_JSON: &str = include_str!("../assets/task_labels.json");
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 const THEME_CSS: Asset = asset!("/assets/dx-components-theme.css");
@@ -556,8 +558,80 @@ fn PredictionPage() -> Element {
                 // Header (no card — plain text aligned with sidebar padding)
                 div {
                     class: "flex flex-col gap-1",
-                    div { class: "text-base font-semibold leading-none", "mutafitup" }
-                    div { class: "text-sm text-neutral-400", "Protein property prediction" }
+                    // Row 1: title + GitHub icon
+                    div {
+                        class: "flex items-center justify-between",
+                        div { class: "text-base font-semibold leading-none", "mutafitup" }
+                        a {
+                            href: "https://github.com/Moomboh/mutafitup",
+                            target: "_blank",
+                            class: "text-neutral-400 hover:text-neutral-200 transition-colors",
+                            title: "View on GitHub",
+                            svg {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                width: "16",
+                                height: "16",
+                                view_box: "0 0 24 24",
+                                fill: "currentColor",
+                                // GitHub mark (Simple Icons)
+                                path {
+                                    d: "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12",
+                                }
+                            }
+                        }
+                    }
+                    // Row 2: subtitle + version
+                    div {
+                        class: "flex items-center justify-between",
+                        div { class: "text-sm text-neutral-400", "Protein property prediction" }
+                        div { class: "text-xs text-neutral-500", "v{VERSION}" }
+                    }
+                    // Row 3: platform-specific link (Download desktop / Open web version)
+                    if cfg!(target_arch = "wasm32") {
+                        a {
+                            href: "https://github.com/Moomboh/mutafitup/releases/latest",
+                            target: "_blank",
+                            class: "flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors",
+                            // Lucide Download icon
+                            svg {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                width: "12",
+                                height: "12",
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                path { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }
+                                polyline { points: "7 10 12 15 17 10" }
+                                line { x1: "12", y1: "15", x2: "12", y2: "3" }
+                            }
+                            "Download desktop app"
+                        }
+                    } else {
+                        a {
+                            href: "https://mutafitup.moomboh.com",
+                            target: "_blank",
+                            class: "flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors",
+                            // Lucide Globe icon
+                            svg {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                width: "12",
+                                height: "12",
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                circle { cx: "12", cy: "12", r: "10" }
+                                path { d: "M2 12h20" }
+                                path { d: "M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" }
+                            }
+                            "Open web version"
+                        }
+                    }
                 }
 
                 // Sequence input
@@ -739,7 +813,12 @@ fn PredictionPage() -> Element {
                 // ESM attribution (required by Cambrian Open License)
                 div {
                     class: "mt-auto pt-4 text-xs text-neutral-500",
-                    "Built with ESM"
+                    a {
+                        href: "https://www.evolutionaryscale.ai/blog/esm-cambrian",
+                        target: "_blank",
+                        class: "hover:text-neutral-300 transition-colors",
+                        "Built with ESM"
+                    }
                 }
             }
 
