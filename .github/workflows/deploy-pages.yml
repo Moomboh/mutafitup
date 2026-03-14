@@ -19,8 +19,6 @@ env:
 
 jobs:
   build:
-    # TODO: remove 'if: false' to enable this workflow once ready
-    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -68,6 +66,9 @@ jobs:
           # Inject the service worker script into index.html (before </head>)
           sed -i 's|</head>|<script src="/coi-serviceworker.min.js"></script>\n</head>|' \
             "$OUT/index.html"
+
+      - name: Write CNAME for custom domain
+        run: echo "mutafitup.moomboh.com" > app/target/dx/mutafitup-app/release/web/public/CNAME
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
