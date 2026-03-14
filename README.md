@@ -13,7 +13,7 @@ Orchestrated with **[Snakemake](https://snakemake.github.io/)**, the pipeline co
 The fine-tuned models and benchmark datasets produced by this pipeline are available on Hugging Face:
 
 - **[Moomboh/ESMC-300M-mutafitup](https://huggingface.co/Moomboh/ESMC-300M-mutafitup)** -- Multi-task LoRA fine-tuned ONNX models and PyTorch checkpoints derived from ESM-C 300M. Includes 45 training runs across 4 training strategies (heads-only, single-task LoRA, AccGrad-LoRA, Align-LoRA).
-- **[Moomboh/mutafitup-datasets](https://huggingface.co/datasets/Moomboh/mutafitup-datasets)** -- 16 leakage-free protein function prediction benchmarks in Parquet format. All datasets have been resplit to eliminate cross-dataset sequence similarity-based data leakage.
+- **[Moomboh/mutafitup-datasets](https://huggingface.co/datasets/Moomboh/mutafitup-datasets)** -- 16 leakage-controlled protein prediction benchmarks in Parquet format. All datasets have been resplit to reduce cross-dataset sequence similarity-based data leakage while preserving upstream benchmark test splita (except for meltome).
 
 ## Project Overview
 
