@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@source "./src/**/*.{rs,html,css}";
+
+@theme {
+    --color-surface: #0f1116;
+    --color-surface-elevated: #1a1b23;
+    --color-border-subtle: #2d2e3a;
+}

@@ -1,0 +1,82 @@
+/* Custom app styles — loaded after tailwind.css and dx-components-theme.css
+   so these rules win the cascade. */
+
+/* Force dark color scheme so WebKit/Safari overlay scrollbars use dark
+   appearance instead of the light system default. */
+:root {
+    color-scheme: dark;
+}
+
+/* Slim dark-themed scrollbars.
+   Override the theme's @supports block which sets light-coloured
+   scrollbar-color via --secondary-color-2. */
+@supports (scrollbar-width: auto) {
+    * {
+        scrollbar-width: thin;
+    }
+
+    :not(:hover) {
+        scrollbar-color: transparent transparent;
+    }
+
+    :hover {
+        scrollbar-color: #2d2e3a transparent;
+    }
+}
+
+/* WebKit / Safari scrollbar styling (used by Tauri on macOS). */
+*::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #2d2e3a;
+    border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: #3d3e4a;
+}
+
+/* Dark-themed model selector dropdown */
+.model-select {
+    width: 100%;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    color: #e5e5e5;
+    background-color: #0f1116;
+    border: 1px solid #2d2e3a;
+    border-radius: 0.375rem;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    padding-right: 1.5rem;
+}
+
+.model-select:hover {
+    border-color: #3d3e4a;
+}
+
+.model-select:focus {
+    border-color: #4363d8;
+    box-shadow: 0 0 0 1px #4363d8;
+}
+
+.model-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.model-select option {
+    background-color: #1a1b23;
+    color: #e5e5e5;
+}

@@ -1,0 +1,5 @@
+include: "evaluation/bootstrap.smk"
+include: "evaluation/metrics.smk"
+include: "evaluation/plotting.smk"
+include: "evaluation/tables.smk"
+include: "evaluation/auprc.smk"

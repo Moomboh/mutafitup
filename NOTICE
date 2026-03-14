@@ -1,0 +1,16 @@
+mutafitup — Multi-task fine-tuning of protein language models
+Copyright 2025 Elias Kahl
+
+This project is licensed under the MIT License. See LICENSE.md for details.
+
+---
+
+This project includes Derivative Works of the ESMC 300M Open Model by
+EvolutionaryScale, PBC.
+
+The ESMC 300M Model is licensed under the EvolutionaryScale Cambrian Open
+License Agreement. See THIRD_PARTY_LICENSES/CAMBRIAN_OPEN_LICENSE.md for the
+full license text or visit:
+https://www.evolutionaryscale.ai/policies/cambrian-open-license-agreement
+
+Built with ESM

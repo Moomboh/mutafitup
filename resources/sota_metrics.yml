@@ -1,0 +1,265 @@
+# State of the Art (SOTA) Test Set Baseline Metrics
+# This file compiles published performance numbers on the exact test sets used in our pipeline.
+# Only exact test-set / metric matches belong here.
+#
+# The ``reference`` field records the source used for the split-matched number.
+# For several GPSite baselines, the exact independent-test MCC values are
+# reported in Yuan2024-vp rather than in the original method papers.
+#
+# Test sets in use:
+# - NEW364 (secstr, secstr8)
+# - CB513 (rsa)
+# - CheZOD117 (disorder)
+# - setDeepLoc (subloc; via Schmirler 2024 provenance)
+# - GPSite independent test sets (gpsite_*)
+#
+# Note on Meltome: 
+# The literature (e.g., DeepSTABp, ProTstab2) evaluates on FLIP/Meltome splits. 
+# Because our pipeline dynamically reconstructs the meltome test set during the
+# 'resplit' phase to absorb cross-task test contamination, our test set diverges 
+# from the standard FLIP splits. Therefore, direct SOTA comparisons for meltome 
+# are excluded here to ensure statistically fair 1:1 comparisons.
+
+tasks:
+  secstr:
+    test_set: NEW364
+    metric: accuracy
+    metric_label: Q3
+    baselines:
+      - name: NetSurfP-2.0
+        reference: Klausen2019-kz
+        value: 0.843  # NEW364 Q3 accuracy
+      - name: NetSurfP-3.0
+        reference: Hoie2022-ey
+        value: 0.833  # NEW364 Q3 accuracy
+      - name: ILMCNet
+        reference: Dong2024-hv
+        value: 0.8451  # NEW364 Q3 accuracy
+      - name: AttSec
+        reference: Kim2023-jz
+        value: 0.852  # NEW364 Q3 accuracy
+
+  secstr8:
+    test_set: NEW364
+    metric: accuracy
+    metric_label: Q8
+    baselines:
+      - name: NetSurfP-2.0
+        reference: Klausen2019-kz
+        value: 0.739  # NEW364 Q8 accuracy
+      - name: NetSurfP-3.0
+        reference: Hoie2022-ey
+        value: 0.729  # NEW364 Q8 accuracy
+      - name: ILMCNet
+        reference: Dong2024-hv
+        value: 0.7417  # NEW364 Q8 accuracy
+      - name: AttSec
+        reference: Kim2023-jz
+        value: 0.755  # NEW364 Q8 accuracy
+
+  rsa:
+    test_set: CB513
+    metric: pearson  # CB513 RSA is reported as PCC/Pearson in split-matched literature
+    metric_label: "Pearson r"
+    baselines:
+      - name: NetSurfP-2.0
+        reference: Klausen2019-kz
+        value: 0.791  # 0.791 PCC
+      - name: NetSurfP-3.0
+        reference: Hoie2022-ey
+        value: 0.793  # 0.793 PCC
+      - name: PatchProt
+        reference: Gogishvili2024-wp
+        value: 0.816  # 0.816 PCC
+
+  disorder:
+    test_set: CheZOD117
+    metric: spearman
+    metric_label: "Spearman \u03C1"
+    baselines:
+      - name: ODiNPred
+        reference: Dass2020-ju
+        value: 0.67  # CheZOD117 Spearman, rounded from published comparison
+      - name: SETH
+        reference: Ilzhofer2022-pt
+        value: 0.70  # CheZOD117 Spearman
+
+  subloc:
+    test_set: setDeepLoc
+    metric: accuracy
+    metric_label: Accuracy
+    baselines:
+      - name: Light Attention
+        reference: Stark2021-ik
+        value: 0.86  # setDeepLoc Q10 accuracy
+
+  gpsite_dna:
+    test_set: GPSite independent DNA
+    metric: mcc
+    metric_label: MCC
+    baselines:
+      - name: GraphBind
+        reference: Yuan2024-vp
+        value: 0.422
+      - name: GraphSite
+        reference: Yuan2024-vp
+        value: 0.437
+      - name: GeoBind
+        reference: Yuan2024-vp
+        value: 0.445
+      - name: GPSite
+        reference: Yuan2024-vp
+        value: 0.464
+
+  gpsite_rna:
+    test_set: GPSite independent RNA
+    metric: mcc
+    metric_label: MCC
+    baselines:
+      - name: GraphBind
+        reference: Yuan2024-vp
+        value: 0.436
+      - name: GeoBind
+        reference: Yuan2024-vp
+        value: 0.446
+      - name: GPSite
+        reference: Yuan2024-vp
+        value: 0.499
+
+  gpsite_pep:
+    test_set: GPSite independent peptide
+    metric: mcc
+    metric_label: MCC
+    baselines:
+      - name: PepBind
+        reference: Yuan2024-vp
+        value: 0.178
+      - name: PepNN-Struct
+        reference: Yuan2024-vp
+        value: 0.222
+      - name: PepBCL
+        reference: Yuan2024-vp
+        value: 0.233
+      - name: GPSite
+        reference: Yuan2024-vp
+        value: 0.330
+
+  gpsite_pro:
+    test_set: GPSite independent protein
+    metric: mcc
+    metric_label: MCC
+    baselines:
+      - name: GraphPPIS
+        reference: Yuan2024-vp
+        value: 0.328
+      - name: ScanNet
+        reference: Yuan2024-vp
+        value: 0.403
+      - name: GPSite
+        reference: Yuan2024-vp
+        value: 0.391
+
+  gpsite_atp:
+    test_set: GPSite independent ATP
+    metric: mcc
+    metric_label: MCC
+    baselines:
+      - name: TargetS
+        reference: Yuan2024-vp
+        value: 0.483
+      - name: GraphBind
+        reference: Yuan2024-vp
+        value: 0.483
+      - name: GeoBind
+        reference: Yuan2024-vp
+        value: 0.526
+      - name: DELIA
+        reference: Yuan2024-vp
+        value: 0.548
+      - name: GPSite
+        reference: Yuan2024-vp
+        value: 0.668
+
+  gpsite_hem:
+    test_set: GPSite independent HEM
+    metric: mcc
+    metric_label: MCC
+    baselines:
+      - name: TargetS
+        reference: Yuan2024-vp
+        value: 0.598
+      - name: GraphBind
+        reference: Yuan2024-vp
+        value: 0.578
+      - name: DELIA
+        reference: Yuan2024-vp
+        value: 0.614
+      - name: GeoBind
+        reference: Yuan2024-vp
+        value: 0.689
+      - name: GPSite
+        reference: Yuan2024-vp
+        value: 0.722
+
+  gpsite_zn:
+    test_set: GPSite independent Zn2+
+    metric: mcc
+    metric_label: MCC
+    baselines:
+      - name: LMetalSite
+        reference: Yuan2024-vp
+        value: 0.761
+      - name: GPSite
+        reference: Yuan2024-vp
+        value: 0.797
+
+  gpsite_ca:
+    test_set: GPSite independent Ca2+
+    metric: mcc
+    metric_label: MCC
+    baselines:
+      - name: GraphBind
+        reference: Yuan2024-vp
+        value: 0.475
+      - name: LMetalSite
+        reference: Yuan2024-vp
+        value: 0.542
+      - name: GPSite
+        reference: Yuan2024-vp
+        value: 0.593
+
+  gpsite_mg:
+    test_set: GPSite independent Mg2+
+    metric: mcc
+    metric_label: MCC
+    baselines:
+      - name: GraphBind
+        reference: Yuan2024-vp
+        value: 0.331
+      - name: LMetalSite
+        reference: Yuan2024-vp
+        value: 0.419
+      - name: GPSite
+        reference: Yuan2024-vp
+        value: 0.438
+
+  gpsite_mn:
+    test_set: GPSite independent Mn2+
+    metric: mcc
+    metric_label: MCC
+    baselines:
+      - name: DELIA
+        reference: Yuan2024-vp
+        value: 0.574
+      - name: LMetalSite
+        reference: Yuan2024-vp
+        value: 0.661
+      - name: GPSite
+        reference: Yuan2024-vp
+        value: 0.701
+
+  # Note: The literature occasionally refers to other independent test sets.
+  # Contextual but not exact-match comparators are intentionally excluded here.
+  # This includes SPOT-1D-LM on TEST2018/CASP14_FM, DeepLoc 2.0/2.1 on richer
+  # localization label spaces, DR-BERT and LoRA-DR-suite on CAID-style disorder
+  # benchmarks, and PeSTo / GAPS / E2EATP on non-matching binding-site splits.

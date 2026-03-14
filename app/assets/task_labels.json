@@ -1,0 +1,120 @@
+{
+  "subloc": {
+    "description": "Subcellular localization",
+    "class_labels": [
+      "Cell membrane",
+      "Cytoplasm",
+      "Endoplasmic reticulum",
+      "Golgi apparatus",
+      "Lysosome/Vacuole",
+      "Mitochondrion",
+      "Nucleus",
+      "Peroxisome",
+      "Plastid",
+      "Extracellular"
+    ]
+  },
+  "secstr": {
+    "description": "Secondary structure (3-state)",
+    "class_labels": [
+      "C (Coil)",
+      "E (Strand)",
+      "H (Helix)"
+    ]
+  },
+  "secstr8": {
+    "description": "Secondary structure (8-state DSSP)",
+    "class_labels": [
+      "G (3-10 helix)",
+      "H (Alpha helix)",
+      "I (Pi helix)",
+      "B (Beta bridge)",
+      "E (Extended strand)",
+      "S (Bend)",
+      "T (Turn)",
+      "C (Coil)"
+    ]
+  },
+  "gpsite_dna": {
+    "description": "DNA binding site",
+    "class_labels": [
+      "Non-binding",
+      "DNA-binding"
+    ]
+  },
+  "gpsite_rna": {
+    "description": "RNA binding site",
+    "class_labels": [
+      "Non-binding",
+      "RNA-binding"
+    ]
+  },
+  "gpsite_pep": {
+    "description": "Peptide binding site",
+    "class_labels": [
+      "Non-binding",
+      "Peptide-binding"
+    ]
+  },
+  "gpsite_pro": {
+    "description": "Protein binding site",
+    "class_labels": [
+      "Non-binding",
+      "Protein-binding"
+    ]
+  },
+  "gpsite_atp": {
+    "description": "ATP binding site",
+    "class_labels": [
+      "Non-binding",
+      "ATP-binding"
+    ]
+  },
+  "gpsite_hem": {
+    "description": "Heme binding site",
+    "class_labels": [
+      "Non-binding",
+      "Heme-binding"
+    ]
+  },
+  "gpsite_zn": {
+    "description": "Zinc binding site",
+    "class_labels": [
+      "Non-binding",
+      "Zinc-binding"
+    ]
+  },
+  "gpsite_ca": {
+    "description": "Calcium binding site",
+    "class_labels": [
+      "Non-binding",
+      "Calcium-binding"
+    ]
+  },
+  "gpsite_mg": {
+    "description": "Magnesium binding site",
+    "class_labels": [
+      "Non-binding",
+      "Magnesium-binding"
+    ]
+  },
+  "gpsite_mn": {
+    "description": "Manganese binding site",
+    "class_labels": [
+      "Non-binding",
+      "Manganese-binding"
+    ]
+  },
+  "meltome": {
+    "description": "Melting temperature",
+    "unit": "\u00b0C"
+  },
+  "disorder": {
+    "description": "Protein disorder (CheZOD Z-score)",
+    "unit": "Z-score"
+  },
+  "rsa": {
+    "description": "Relative solvent accessibility",
+    "unit": "RSA (0\u20131)"
+  }
+}

@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.12,<3.13
+  - pooch>=1.8.0
+  - pip

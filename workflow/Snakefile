@@ -1,0 +1,403 @@
+import os
+
+from snakemake.utils import validate
+
+from mutafitup.evaluation.resolve import (
+    resolve_all_metric_inputs,
+    resolve_bootstrap_inputs,
+    resolve_evaluation_inputs,
+)
+from mutafitup.evaluation.auprc_resolve import (
+    resolve_auprc_bootstrap_inputs,
+    resolve_auprc_evaluation_inputs,
+    resolve_auprc_prob_prediction_inputs,
+)
+
+
+validate(config, "../config/schemas/config.schema.yml")
+
+
+include: "rules/common.smk"
+include: "rules/prepare_data.smk"
+include: "rules/subsample.smk"
+include: "rules/resplit.smk"
+include: "rules/data_stats.smk"
+include: "rules/finetune.smk"
+include: "rules/predict.smk"
+include: "rules/plotting.smk"
+include: "rules/evaluation.smk"
+include: "rules/representation_eval.smk"
+
+
+# ---------------------------------------------------------------------------
+# Prediction helpers (driven by config["predictions"])
+# ---------------------------------------------------------------------------
+
+def _get_prediction_variant_split_pairs():
+    """Return ``(variant, split)`` pairs from ``predictions.variants`` config.
+
+    Each entry in ``predictions.variants`` is an object with ``variant``
+    (str) and ``splits`` (list of str), e.g.::
+
+        - variant: best_overall
+          splits: [valid, test]
+    """
+    pairs = []
+    for entry in config.get("predictions", {}).get("variants", []):
+        variant = entry["variant"]
+        for split in entry["splits"]:
+            pairs.append((variant, split))
+    return pairs
+
+
+def _get_prediction_targets():
+    """Return all prediction directory targets."""
+    targets = []
+    pairs = _get_prediction_variant_split_pairs()
+    configured_variants = {v for v, _ in pairs}
+
+    for section, run_id in get_train_runs():
+        for variant, split in pairs:
+            targets.append(
+                f"results/predictions/{section}/{run_id}/{variant}/{split}"
+            )
+        # Per-run extras: extra variants inherit all splits from their entries
+        run_key = f"{section}/{run_id}"
+        extras = config.get("predictions", {}).get("extra", {}).get(run_key, {})
+        extra_variants = extras.get("variants", [])
+        all_splits = sorted({s for _, s in pairs})
+        for variant in extra_variants:
+            if variant not in configured_variants:
+                for split in all_splits:
+                    targets.append(
+                        f"results/predictions/{section}/{run_id}/{variant}/{split}"
+                    )
+    return targets
+
+
+# ---------------------------------------------------------------------------
+# Bootstrap targets
+# ---------------------------------------------------------------------------
+
+def _get_bootstrap_targets():
+    """Return bootstrap parquet targets derived from evaluations config."""
+    targets = []
+    for subset_type, dataset, split in resolve_bootstrap_inputs(config):
+        targets.append(
+            f"results/bootstraps/{subset_type}/{dataset}/{split}.parquet"
+        )
+    return targets
+
+
+# ---------------------------------------------------------------------------
+# Metric targets
+# ---------------------------------------------------------------------------
+
+def _get_metric_targets():
+    """Return per-run metric JSON targets derived from evaluations config."""
+    targets = []
+    for entry in resolve_all_metric_inputs(config):
+        targets.append(
+            f"results/metrics/{entry['section']}/{entry['run_id']}/"
+            f"{entry['variant']}/{entry['split']}/{entry['task']}.json"
+        )
+    return targets
+
+
+# ---------------------------------------------------------------------------
+# Evaluation targets
+# ---------------------------------------------------------------------------
+
+def _get_evaluation_targets():
+    """Return evaluation output targets (plots, summaries, and Typst tables)."""
+    targets = []
+    for ev in config.get("evaluations", []):
+        eval_id = ev["id"]
+        split = ev["split"]
+        targets.append(f"results/evaluation/{eval_id}/heatmap_{split}.png")
+        for ds in ev["datasets"]:
+            targets.append(f"results/evaluation/{eval_id}/bars_{ds['task']}_{split}.png")
+        targets.append(f"results/evaluation/{eval_id}/delta_summary_{split}.png")
+        targets.append(f"results/evaluation/{eval_id}/summary_{split}.json")
+        targets.append(f"results/thesis_tables/{eval_id}/full_results_{split}.typ")
+        targets.append(f"results/thesis_tables/{eval_id}/delta_summary_{split}.typ")
+        # SOTA comparison plots — one per test-set group that overlaps with
+        # this evaluation's task set.
+        for grp in _get_sota_groups_for_evaluation(eval_id):
+            targets.append(f"results/evaluation/{eval_id}/sota_{grp}_{split}.png")
+    return targets
+
+
+# ---------------------------------------------------------------------------
+# AUPRC evaluation targets (independent pipeline)
+# ---------------------------------------------------------------------------
+
+def _get_auprc_prob_prediction_targets():
+    """Return probability prediction directory targets for AUPRC pipeline."""
+    targets = []
+    seen = set()
+    for entry in resolve_auprc_prob_prediction_inputs(config):
+        # We need the directory, not individual files
+        key = (entry["section"], entry["run_id"], entry["variant"], entry["split"])
+        if key not in seen:
+            seen.add(key)
+            targets.append(
+                f"results/prob_predictions/{entry['section']}/{entry['run_id']}/"
+                f"{entry['variant']}/{entry['split']}"
+            )
+    return targets
+
+
+def _get_auprc_bootstrap_targets():
+    """Return bootstrap targets needed by AUPRC evaluations.
+
+    These reuse the same bootstrap rule as the main pipeline, so they
+    point to ``results/bootstraps/...`` (not a new directory).
+    """
+    targets = []
+    for subset_type, dataset, split in resolve_auprc_bootstrap_inputs(config):
+        t = f"results/bootstraps/{subset_type}/{dataset}/{split}.parquet"
+        if t not in targets:
+            targets.append(t)
+    return targets
+
+
+def _get_auprc_metric_targets():
+    """Return per-run AUPRC metric JSON targets."""
+    targets = []
+    for entry in resolve_auprc_prob_prediction_inputs(config):
+        targets.append(
+            f"results/auprc_metrics/{entry['section']}/{entry['run_id']}/"
+            f"{entry['variant']}/{entry['split']}/{entry['task']}.json"
+        )
+    return targets
+
+
+def _get_auprc_evaluation_targets():
+    """Return AUPRC evaluation output targets (summary + bar chart)."""
+    targets = []
+    for ev in config.get("auprc_evaluations", []):
+        eval_id = ev["id"]
+        split = ev["split"]
+        targets.append(f"results/auprc_evaluation/{eval_id}/summary_{split}.json")
+        targets.append(f"results/auprc_evaluation/{eval_id}/bar_chart_{split}.png")
+    return targets
+
+
+# ---------------------------------------------------------------------------
+# ONNX export targets
+# ---------------------------------------------------------------------------
+
+def _get_onnx_export_targets():
+    """Return ONNX export metadata targets from config."""
+    targets = []
+    for entry in config.get("onnx_export", []):
+        section = entry["section"]
+        run_id = entry["id"]
+        variant = entry["variant"]
+        targets.append(
+            f"results/onnx_export/{section}/{run_id}/{variant}/export_metadata.json"
+        )
+    return targets
+
+
+def _get_normalization_stats_targets():
+    """Return normalization stats JSON targets for each ONNX export."""
+    targets = []
+    for entry in config.get("onnx_export", []):
+        section = entry["section"]
+        run_id = entry["id"]
+        variant = entry["variant"]
+        targets.append(
+            f"results/onnx_export/{section}/{run_id}/{variant}/normalization_stats.json"
+        )
+    return targets
+
+
+def _get_model_manifest_target():
+    """Return the model manifest target if any ONNX exports are configured."""
+    if config.get("onnx_export"):
+        return ["results/onnx_export/models.json"]
+    return []
+
+
+# ---------------------------------------------------------------------------
+# ONNX validation targets (Node.js vs PyTorch)
+# ---------------------------------------------------------------------------
+
+def _get_onnx_validate_targets():
+    """Return ONNX validation report targets.
+
+    For each ONNX export entry, generates a validation target for every
+    split listed in that entry's ``splits`` field.
+    """
+    targets = []
+    for entry in config.get("onnx_export", []):
+        section = entry["section"]
+        run_id = entry["id"]
+        variant = entry["variant"]
+        for split in entry["splits"]:
+            targets.append(
+                f"results/onnx_validate/{section}/{run_id}/{variant}/{split}/report.json"
+            )
+    return targets
+
+
+# ---------------------------------------------------------------------------
+# Representation evaluation targets
+# ---------------------------------------------------------------------------
+
+def _get_representation_eval_targets():
+    """Return representation-evaluation preparation targets."""
+    if not config.get("representation_eval", {}).get("enabled", False):
+        return []
+
+    return [
+        "results/reference_data/uniprot_sprot/raw/uniprot_sprot.fasta.gz",
+        "results/reference_data/uniprot_sprot/uniprot_sprot.fasta",
+        "results/representation_eval/test_queries/all_test_sequences.fasta",
+        "results/representation_eval/test_queries/sequence_metadata.tsv",
+        "results/representation_eval/swissprot/mmseqs_hits.tsv",
+        "results/representation_eval/swissprot/best_hits.tsv",
+        "results/representation_eval/swissprot/accessions.txt",
+        "results/representation_eval/swissprot/entries.tsv",
+        "results/representation_eval/swissprot/matched_entries.tsv",
+        "results/representation_eval/swissprot/annotation_coverage_summary.tsv",
+        "results/representation_eval/swissprot/annotation_term_supports.tsv",
+        "results/representation_eval/swissprot/annotation_coverage_dashboard.html",
+        "results/representation_eval/swissprot/matched_sequences.fasta",
+        *get_representation_eval_embedding_targets(),
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Leakage targets
+# ---------------------------------------------------------------------------
+
+LEAKAGE_COMPARISONS = [
+    ("train", "train"),
+    ("train", "valid"),
+    ("train", "test"),
+    ("valid", "train"),
+    ("valid", "valid"),
+    ("valid", "test"),
+    ("test", "train"),
+    ("test", "valid"),
+    ("test", "test"),
+]
+
+LEAKAGE_VARIANTS = ["all", "cross_task"]
+
+
+def get_leakage_comparison_targets():
+    """Return leakage comparison figure targets for all profiles and their enabled tools."""
+    profiles = config.get("leakage_analysis", {}).get("profiles", {})
+    targets = []
+    for profile_name, profile_cfg in profiles.items():
+        if not profile_cfg.get("datasets"):
+            continue
+        tools = profile_cfg.get("tools", {})
+        enabled = [name for name, cfg in tools.items() if cfg.get("enabled", False)]
+        for tool in enabled:
+            for variant in LEAKAGE_VARIANTS:
+                for query_split, target_split in LEAKAGE_COMPARISONS:
+                    targets.append(
+                        f"results/leakage_analysis/{profile_name}/comparison_{variant}_{tool}_{query_split}_vs_{target_split}.png"
+                    )
+    return targets
+
+
+rule leakage_analysis:
+    input:
+        *get_leakage_comparison_targets(),
+
+
+rule dashboards:
+    """All data-stats dashboards (resplit, original, comparison, duplicates, resplit summary)."""
+    input:
+        "results/data_stats/resplit/dashboard.html",
+        "results/data_stats/original/dashboard.html",
+        "results/data_stats/comparison/dashboard.html",
+        "results/data_stats/duplicates/resplit/dashboard.html",
+        "results/data_stats/duplicates/original/dashboard.html",
+        "results/data_stats/resplit_summary/dashboard.html",
+
+
+rule app_models:
+    """Build all ONNX exports, normalization stats, and the model manifest.
+
+    This is the minimal set of outputs required to run the app (web or desktop)
+    with locally served models::
+
+        snakemake app_models --workflow-profile workflow/profiles/local
+
+    The ONNX export directories are built implicitly as dependencies of
+    the normalization stats and model manifest rules.
+    """
+    input:
+        *_get_normalization_stats_targets(),
+        *_get_model_manifest_target(),
+
+
+rule all:
+    input:
+        # All data-stats dashboards
+        rules.dashboards.input,
+        # Multitask model training runs
+        expand(
+            "results/train/{section}/{run}/history.json",
+            zip,
+            section=get_train_sections(),
+            run=get_train_run_ids(),
+        ),
+        # Training history plots for each run
+        expand(
+            "results/plots/train/{section}/{run}/losses.png",
+            zip,
+            section=get_train_sections(),
+            run=get_train_run_ids(),
+        ),
+        expand(
+            "results/plots/train/{section}/{run}/metrics.png",
+            zip,
+            section=get_train_sections(),
+            run=get_train_run_ids(),
+        ),
+        expand(
+            "results/plots/train/{section}/{run}/learning_rate.png",
+            zip,
+            section=get_train_sections(),
+            run=get_train_run_ids(),
+        ),
+        "results/plots/parameters/trainable_vs_frozen.png",
+        "results/plots/parameters/summary.json",
+        "results/plots/parameters/summary.csv",
+        "results/thesis_tables/parameters/summary.typ",
+        # Predictions (config-driven variants and splits)
+        *_get_prediction_targets(),
+        # Bootstrap indices for evaluation
+        *_get_bootstrap_targets(),
+        # Per-run metrics for evaluation
+        *_get_metric_targets(),
+        # Evaluation comparison plots
+        *_get_evaluation_targets(),
+        # AUPRC probability predictions
+        *_get_auprc_prob_prediction_targets(),
+        # AUPRC bootstraps (reuses existing bootstrap rule)
+        *_get_auprc_bootstrap_targets(),
+        # AUPRC per-run metrics
+        *_get_auprc_metric_targets(),
+        # AUPRC evaluation summaries and bar charts
+        *_get_auprc_evaluation_targets(),
+        # ONNX model exports
+        *_get_onnx_export_targets(),
+        # Normalization statistics for ONNX exports
+        *_get_normalization_stats_targets(),
+        # Model manifest for the inference app
+        *_get_model_manifest_target(),
+        # ONNX validation (Node.js vs PyTorch)
+        *_get_onnx_validate_targets(),
+        # Dataset leakage analysis comparison figures
+        *get_leakage_comparison_targets(),
+        # Representation-evaluation preparation outputs
+        *_get_representation_eval_targets(),

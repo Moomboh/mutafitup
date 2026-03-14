@@ -1,0 +1,101 @@
+# Root of all ONNX model exports (serves models.json + all model subdirs)
+models_dir := "../results/onnx_export"
+models_port := "8100"
+
+# onnxruntime-web version — must match the ort-web crate (see Cargo.toml)
+ort_web_version := "1.24.2"
+ort_dir := "vendor/onnxruntime-web"
+ort_port := "8101"
+
+# List available recipes
+default:
+    @just --list
+
+# Download onnxruntime-web JS/WASM files from npm (pinned to ort_web_version)
+fetch-ort-web:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    version="{{ ort_web_version }}"
+    dest="{{ ort_dir }}"
+
+    # Skip if already downloaded at the correct version
+    if [[ -f "$dest/.version" ]] && [[ "$(cat "$dest/.version")" == "$version" ]]; then
+        echo "onnxruntime-web@$version already downloaded in $dest"
+        exit 0
+    fi
+
+    echo "Downloading onnxruntime-web@$version..."
+    tmpdir=$(mktemp -d)
+    trap "rm -rf $tmpdir" EXIT
+
+    tarball_url="https://registry.npmjs.org/onnxruntime-web/-/onnxruntime-web-${version}.tgz"
+    curl -sL "$tarball_url" | tar -xz -C "$tmpdir"
+
+    mkdir -p "$dest"
+    cp "$tmpdir/package/dist/ort.webgpu.min.js" "$dest/"
+    # WebGPU EP (jsep = JavaScript Execution Provider)
+    cp "$tmpdir/package/dist/ort-wasm-simd-threaded.jsep.mjs" "$dest/"
+    cp "$tmpdir/package/dist/ort-wasm-simd-threaded.jsep.wasm" "$dest/"
+    # WASM CPU fallback (asyncify variant, required by ort.webgpu.min.js)
+    cp "$tmpdir/package/dist/ort-wasm-simd-threaded.asyncify.mjs" "$dest/"
+    cp "$tmpdir/package/dist/ort-wasm-simd-threaded.asyncify.wasm" "$dest/"
+    echo "$version" > "$dest/.version"
+
+    echo "Downloaded 5 files to $dest ($(du -sh "$dest" | cut -f1) total)"
+
+# Serve web app with model file server and ort runtime server
+web: fetch-ort-web (_check-cmd "miniserve")
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pids=()
+    cleanup() { for p in "${pids[@]}"; do kill "$p" 2>/dev/null || true; done; }
+    trap cleanup EXIT
+
+    miniserve --interfaces 127.0.0.1 --route-prefix __models__ \
+        --header "Cross-Origin-Resource-Policy: cross-origin" \
+        {{ models_dir }} -p {{ models_port }} &
+    pids+=($!)
+    miniserve --interfaces 127.0.0.1 --route-prefix __ort__ \
+        --header "Cross-Origin-Resource-Policy: cross-origin" \
+        --header "Cross-Origin-Embedder-Policy: require-corp" \
+        --header "Cross-Origin-Opener-Policy: same-origin" \
+        {{ ort_dir }} -p {{ ort_port }} &
+    pids+=($!)
+
+    dx serve --web --features web --no-default-features --cross-origin-policy
+
+# Serve desktop app (+ optional GPU backend features)
+desktop *FEATURES:
+    dx serve --platform desktop --features desktop{{ if FEATURES != "" { "," + FEATURES } else { "" } }} --no-default-features
+
+# Run unit tests
+test:
+    cargo test --features desktop --no-default-features
+
+# Check compilation for both targets
+check:
+    cargo check --features desktop --no-default-features
+    cargo check --target wasm32-unknown-unknown --features web --no-default-features
+
+# Build web app
+build-web:
+    dx build --web --features web --no-default-features
+
+# Build desktop app (+ optional GPU backend features)
+build-desktop *FEATURES:
+    dx build --platform desktop --features desktop{{ if FEATURES != "" { "," + FEATURES } else { "" } }} --no-default-features
+
+# Start only the model file server
+model-server: (_check-cmd "miniserve")
+    miniserve --interfaces 127.0.0.1 --route-prefix __models__ \
+        --header "Cross-Origin-Resource-Policy: cross-origin" \
+        {{ models_dir }} -p {{ models_port }}
+
+# Verify a command is available
+[private]
+_check-cmd cmd:
+    #!/usr/bin/env bash
+    if ! command -v {{ cmd }} &>/dev/null; then
+        echo "error: '{{ cmd }}' is not installed. Install with: cargo install {{ cmd }}"
+        exit 1
+    fi

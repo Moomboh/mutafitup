@@ -1,0 +1,92 @@
+configfile: config/config_dev.yml
+
+executor: slurm
+
+use-conda: true
+jobs: 12
+latency-wait: 60
+
+default-resources:
+  runtime: "15m"
+  gres: "gpu:1"
+  mem_mb: 2000
+  slurm_partition: "lrz-v100x2,lrz-dgx-1-p100x8,lrz-dgx-1-v100x8"
+  slurm_account: default
+  tasks_per_gpu: 0 # prevent slurm executor from setting --ntasks-per-gpu
+
+set-resources:
+  finetune_heads_only:
+    runtime: "15m"
+    mem_mb: 64000
+    gres: "gpu:1"
+    slurm_partition: "lrz-hgx-h100-94x4,lrz-hgx-a100-80x4,lrz-dgx-a100-80x8"
+    slurm_account: default
+    tasks_per_gpu: 0 # prevent slurm executor from setting --ntasks-per-gpu
+
+  finetune_lora:
+    runtime: "60m"
+    mem_mb: 64000
+    gres: "gpu:1"
+    slurm_partition: "lrz-hgx-h100-94x4,lrz-hgx-a100-80x4,lrz-dgx-a100-80x8"
+    slurm_account: default
+    tasks_per_gpu: 0 # prevent slurm executor from setting --ntasks-per-gpu
+
+  finetune_accgrad_lora:
+    runtime: "60m"
+    mem_mb: 64000
+    gres: "gpu:1"
+    slurm_partition: "lrz-hgx-h100-94x4,lrz-hgx-a100-80x4,lrz-dgx-a100-80x8"
+    slurm_account: default
+    tasks_per_gpu: 0 # prevent slurm executor from setting --ntasks-per-gpu
+
+  finetune_align_lora:
+    runtime: "60m"
+    mem_mb: 64000
+    gres: "gpu:1"
+    slurm_partition: "lrz-hgx-h100-94x4,lrz-hgx-a100-80x4,lrz-dgx-a100-80x8"
+    slurm_account: default
+    tasks_per_gpu: 0 # prevent slurm executor from setting --ntasks-per-gpu
+
+  predict:
+    runtime: "10m"
+    mem_mb: 64000
+    gres: "gpu:1"
+    slurm_partition: "lrz-hgx-h100-94x4,lrz-hgx-a100-80x4,lrz-dgx-a100-80x8"
+    slurm_account: default
+    tasks_per_gpu: 0 # prevent slurm executor from setting --ntasks-per-gpu
+
+  resplit_mmseqs_cluster:
+    runtime: "2h"
+    mem_mb: 32000
+    gres: "gpu:1"
+    slurm_partition: "lrz-hgx-h100-94x4,lrz-hgx-a100-80x4,lrz-dgx-a100-80x8"
+    slurm_account: default
+    tasks_per_gpu: 0
+
+  resplit_foldseek_cluster:
+    runtime: "4h"
+    mem_mb: 64000
+    gres: "gpu:1"
+    slurm_partition: "lrz-hgx-h100-94x4,lrz-hgx-a100-80x4,lrz-dgx-a100-80x8"
+    slurm_account: default
+    tasks_per_gpu: 0
+
+  download_prostt5:
+    runtime: "30m"
+    mem_mb: 4000
+
+  leakage_mmseqs_search:
+    runtime: "1h"
+    mem_mb: 16000
+    gres: "gpu:1"
+    slurm_partition: "lrz-hgx-h100-94x4,lrz-hgx-a100-80x4,lrz-dgx-a100-80x8"
+    slurm_account: default
+    tasks_per_gpu: 0
+
+  leakage_foldseek_search:
+    runtime: "2h"
+    mem_mb: 64000
+    gres: "gpu:1"
+    slurm_partition: "lrz-hgx-h100-94x4,lrz-hgx-a100-80x4,lrz-dgx-a100-80x8"
+    slurm_account: default
+    tasks_per_gpu: 0

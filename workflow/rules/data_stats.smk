@@ -1,0 +1,5 @@
+include: "data_stats/dashboard.smk"
+include: "data_stats/comparison.smk"
+include: "data_stats/duplicates.smk"
+include: "data_stats/leakage.smk"
+include: "data_stats/resplit_summary.smk"

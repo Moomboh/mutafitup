@@ -1,0 +1,10 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python>=3.12,<3.13
+  - pandas>=2.0.0
+  - pyarrow>=14.0.0
+  - numpy>=1.23.0
+  - mmseqs2
+  - pip

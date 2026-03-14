@@ -1,0 +1,32 @@
+[application]
+
+[web.app]
+
+# HTML title tag content
+title = "mutafitup-app"
+
+# include `assets` in web platform
+[web.resource]
+
+# Additional CSS style files
+style = []
+
+# Additional JavaScript files
+script = []
+
+[web.resource.dev]
+
+# Javascript code file
+# serve: [dev-server] only
+script = []
+
+# Proxy model file requests to a local miniserve instance.
+# Serves the entire onnx_export tree (models.json + all model subdirs).
+[[web.proxy]]
+backend = "http://localhost:8100/__models__/"
+
+# Proxy onnxruntime-web runtime files (JS/WASM) to a local miniserve instance.
+[[web.proxy]]
+backend = "http://localhost:8101/__ort__/"
+
+

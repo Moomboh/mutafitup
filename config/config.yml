@@ -1,0 +1,1535 @@
+datasets:
+  schmirler_2024:
+    url: https://raw.githubusercontent.com/RSchmirler/data-repo_plm-finetune-eval/refs/heads/main/training%20data.zip
+    hash: 992eb23605d864ec4b1be1b91eafad2739baa7b6a8cfc883f1f660f44cc3e8aa
+    subsets:
+    - name: subloc
+      type: per_protein_classification
+    - name: meltome
+      type: per_protein_regression
+    - name: disorder
+      type: per_residue_regression
+
+  gpsite:
+    commit: 58cfa4e59f077e531fb38cf4a04bec6aea706454
+    base_url: https://raw.githubusercontent.com/biomed-AI/GPSite
+    cluster_min_seq_id: 0.2
+    valid_cluster_fraction: 0.1
+    random_seed: 42
+    subsets:
+    - name: gpsite_dna
+      type: per_residue_classification
+      ligand: DNA
+    - name: gpsite_rna
+      type: per_residue_classification
+      ligand: RNA
+    - name: gpsite_pep
+      type: per_residue_classification
+      ligand: PEP
+    - name: gpsite_pro
+      type: per_residue_classification
+      ligand: PRO
+    - name: gpsite_atp
+      type: per_residue_classification
+      ligand: ATP
+    - name: gpsite_hem
+      type: per_residue_classification
+      ligand: HEM
+    - name: gpsite_zn
+      type: per_residue_classification
+      ligand: ZN
+    - name: gpsite_ca
+      type: per_residue_classification
+      ligand: CA
+    - name: gpsite_mg
+      type: per_residue_classification
+      ligand: MG
+    - name: gpsite_mn
+      type: per_residue_classification
+      ligand: MN
+
+  netsurfp2:
+    urls:
+      train_npz: https://services.healthtech.dtu.dk/services/NetSurfP-2.0/training_data/Train_HHblits.npz
+      cb513_npz: https://services.healthtech.dtu.dk/services/NetSurfP-2.0/training_data/CB513_HHblits.npz
+      new364: https://www.dropbox.com/s/g49lb352ij4cnt7/NEW364.csv?dl=1
+    hashes:
+      train_npz: a6e08d113848382b8436f71ece943434f38484d92d95e72cd700a326011188da
+      cb513_npz: 88908e2db238247a97027cd01e1cc623b31c41ef540ceca3d6de9affb6c6d2e2
+      new364: 2e7b9ff90988b892543e21173f3d061967b415f1522174723fb29087ce14c940
+    cluster_min_seq_id: 0.2
+    valid_cluster_fraction: 0.1
+    random_seed: 42
+    subsets:
+    - name: secstr8
+      type: per_residue_classification
+    - name: secstr
+      type: per_residue_classification
+    - name: rsa
+      type: per_residue_regression
+
+standardized_datasets:
+  per_protein_regression:
+    meltome:
+      color: '#e6194b'
+      primary_metric: spearman
+
+  per_protein_classification:
+    subloc:
+      color: '#3cb44b'
+      num_labels: 10
+      primary_metric: accuracy
+
+  per_residue_classification:
+    secstr:
+      color: '#4363d8'
+      num_labels: 3
+      primary_metric: accuracy
+    secstr8:
+      color: '#f58231'
+      num_labels: 8
+      primary_metric: accuracy
+    gpsite_dna:
+      color: '#f032e6'
+      num_labels: 2
+      primary_metric: accuracy
+    gpsite_rna:
+      color: '#008080'
+      num_labels: 2
+      primary_metric: accuracy
+    gpsite_pep:
+      color: '#9a6324'
+      num_labels: 2
+      primary_metric: accuracy
+    gpsite_pro:
+      color: '#800000'
+      num_labels: 2
+      primary_metric: accuracy
+    gpsite_atp:
+      color: '#bcf60c'
+      num_labels: 2
+      primary_metric: accuracy
+    gpsite_hem:
+      color: '#fabebe'
+      num_labels: 2
+      primary_metric: accuracy
+    gpsite_zn:
+      color: '#808000'
+      num_labels: 2
+      primary_metric: accuracy
+    gpsite_ca:
+      color: '#000075'
+      num_labels: 2
+      primary_metric: accuracy
+    gpsite_mg:
+      color: '#aaffc3'
+      num_labels: 2
+      primary_metric: accuracy
+    gpsite_mn:
+      color: '#e6beff'
+      num_labels: 2
+      primary_metric: accuracy
+
+  per_residue_regression:
+    disorder:
+      color: '#911eb4'
+      primary_metric: spearman
+    rsa:
+      color: '#46f0f0'
+      primary_metric: spearman
+
+data_stats:
+  histogram_bins:
+    seq_length: 20
+    score: 20
+
+representation_eval:
+  enabled: true
+  swissprot:
+    version: "2026_01"
+    # This current_release URL may move to a newer release in the future.
+    # The pinned version string and SHA256 are the real reproducibility anchors.
+    url: https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
+    hash: 5ba5cb332fc7794ab1c02075a79c8b3d95b573f9b244a38bb53558172e1f9b7b
+  search:
+    min_seq_id: 0.5
+    min_query_coverage: 0.8
+    min_target_coverage: 0.8
+    gpu: 0
+  annotations:
+    batch_size: 100
+  embeddings:
+    batch_size: 8
+    frozen_checkpoints:
+      - esmc_300m
+    include_sections:
+      - heads_only
+      - lora
+      - accgrad_lora
+      - align_lora
+
+resplit:
+  tools:
+    mmseqs:
+      enabled: true
+      min_seq_id: 0.2
+      gpu: 0
+    foldseek:
+      enabled: false
+      min_seq_id: 0.2
+      gpu: 1
+  min_valid_fraction: 0.1
+  random_seed: 42
+  datasets:
+    - secstr
+    - secstr8
+    - disorder
+    - rsa
+    - meltome
+    - subloc
+    - gpsite_dna
+    - gpsite_rna
+    - gpsite_pep
+    - gpsite_pro
+    - gpsite_atp
+    - gpsite_hem
+    - gpsite_zn
+    - gpsite_ca
+    - gpsite_mg
+    - gpsite_mn
+  shared_protein_groups:
+    - [secstr, secstr8, rsa]
+  reconstruct_test:
+    datasets: [meltome]
+    min_test_fraction: 0.1
+  aggregate_duplicates:
+    meltome:
+      strategy: mean
+
+leakage_analysis:
+  profiles:
+    mmseqs_20:
+      datasets:
+      - secstr
+      - disorder
+      - meltome
+      - subloc
+      - gpsite_dna
+      - gpsite_rna
+      - gpsite_pep
+      - gpsite_pro
+      - gpsite_atp
+      - gpsite_hem
+      - gpsite_zn
+      - gpsite_ca
+      - gpsite_mg
+      - gpsite_mn
+      tools:
+        mmseqs:
+          enabled: true
+          min_seq_id: 0.2
+          gpu: 0
+        foldseek:
+          enabled: false
+          min_seq_id: 0.2
+          gpu: 0
+    mmseqs_50:
+      datasets:
+      - secstr
+      - disorder
+      - meltome
+      - subloc
+      - gpsite_dna
+      - gpsite_rna
+      - gpsite_pep
+      - gpsite_pro
+      - gpsite_atp
+      - gpsite_hem
+      - gpsite_zn
+      - gpsite_ca
+      - gpsite_mg
+      - gpsite_mn
+      tools:
+        mmseqs:
+          enabled: true
+          min_seq_id: 0.5
+          gpu: 0
+        foldseek:
+          enabled: false
+          min_seq_id: 0.5
+          gpu: 0
+
+predictions:
+  variants:
+  - variant: best_overall
+    splits: [valid, test]
+  - variant: best_task
+    splits: [valid, test]
+  - variant: best_loss_overall
+    splits: [test]
+  - variant: best_loss_task
+    splits: [test]
+  extra: {}
+
+metrics:
+  num_bootstraps: 1000
+  bootstrap_seed: 42
+  per_residue_classification:
+  - accuracy
+  - f1_macro
+  - mcc
+  per_residue_regression:
+  - spearman
+  - pearson
+  per_protein_classification:
+  - accuracy
+  - f1_macro
+  - mcc
+  per_protein_regression:
+  - spearman
+  - pearson
+
+evaluations:
+  - id: all_tasks_best_overall
+    title: All 16 Tasks
+    split: test
+    variant: best_overall
+    datasets: &eval_all_tasks
+      - {task: secstr, metric: accuracy, metric_label: Q3}
+      - {task: secstr8, metric: accuracy, metric_label: Q8}
+      - {task: rsa, metric: spearman, metric_label: "Spearman \u03C1"}
+      - {task: disorder, metric: spearman, metric_label: "Spearman \u03C1"}
+      - {task: meltome, metric: spearman, metric_label: "Spearman \u03C1"}
+      - {task: subloc, metric: accuracy, metric_label: Accuracy}
+      - {task: gpsite_dna, metric: mcc, metric_label: MCC}
+      - {task: gpsite_rna, metric: mcc, metric_label: MCC}
+      - {task: gpsite_pep, metric: mcc, metric_label: MCC}
+      - {task: gpsite_pro, metric: mcc, metric_label: MCC}
+      - {task: gpsite_atp, metric: mcc, metric_label: MCC}
+      - {task: gpsite_hem, metric: mcc, metric_label: MCC}
+      - {task: gpsite_zn, metric: mcc, metric_label: MCC}
+      - {task: gpsite_ca, metric: mcc, metric_label: MCC}
+      - {task: gpsite_mg, metric: mcc, metric_label: MCC}
+      - {task: gpsite_mn, metric: mcc, metric_label: MCC}
+    baseline: &baseline_single_task_r4
+      label: "Single-task LoRA r4\n(baseline)"
+      runs: &single_task_r4_runs
+        secstr: {section: lora, id: esmc_300m_secstr_r4}
+        secstr8: {section: lora, id: esmc_300m_secstr8_r4}
+        disorder: {section: lora, id: esmc_300m_disorder_r4}
+        rsa: {section: lora, id: esmc_300m_rsa_r4}
+        meltome: {section: lora, id: esmc_300m_meltome_r4}
+        subloc: {section: lora, id: esmc_300m_subloc_r4}
+        gpsite_dna: {section: lora, id: esmc_300m_gpsite_dna_r4}
+        gpsite_rna: {section: lora, id: esmc_300m_gpsite_rna_r4}
+        gpsite_pep: {section: lora, id: esmc_300m_gpsite_pep_r4}
+        gpsite_pro: {section: lora, id: esmc_300m_gpsite_pro_r4}
+        gpsite_atp: {section: lora, id: esmc_300m_gpsite_atp_r4}
+        gpsite_hem: {section: lora, id: esmc_300m_gpsite_hem_r4}
+        gpsite_zn: {section: lora, id: esmc_300m_gpsite_zn_r4}
+        gpsite_ca: {section: lora, id: esmc_300m_gpsite_ca_r4}
+        gpsite_mg: {section: lora, id: esmc_300m_gpsite_mg_r4}
+        gpsite_mn: {section: lora, id: esmc_300m_gpsite_mn_r4}
+    approaches:
+      - label: Single-task Heads-only
+        variant: best_task
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: &single_task_r16_runs
+          secstr: {section: lora, id: esmc_300m_secstr_r16}
+          secstr8: {section: lora, id: esmc_300m_secstr8_r16}
+          disorder: {section: lora, id: esmc_300m_disorder_r16}
+          rsa: {section: lora, id: esmc_300m_rsa_r16}
+          meltome: {section: lora, id: esmc_300m_meltome_r16}
+          subloc: {section: lora, id: esmc_300m_subloc_r16}
+          gpsite_dna: {section: lora, id: esmc_300m_gpsite_dna_r16}
+          gpsite_rna: {section: lora, id: esmc_300m_gpsite_rna_r16}
+          gpsite_pep: {section: lora, id: esmc_300m_gpsite_pep_r16}
+          gpsite_pro: {section: lora, id: esmc_300m_gpsite_pro_r16}
+          gpsite_atp: {section: lora, id: esmc_300m_gpsite_atp_r16}
+          gpsite_hem: {section: lora, id: esmc_300m_gpsite_hem_r16}
+          gpsite_zn: {section: lora, id: esmc_300m_gpsite_zn_r16}
+          gpsite_ca: {section: lora, id: esmc_300m_gpsite_ca_r16}
+          gpsite_mg: {section: lora, id: esmc_300m_gpsite_mg_r16}
+          gpsite_mn: {section: lora, id: esmc_300m_gpsite_mn_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: non_gpsite_best_overall
+    title: Non-binding tasks
+    split: test
+    variant: best_overall
+    datasets: &eval_non_gpsite
+      - {task: secstr, metric: accuracy, metric_label: Q3}
+      - {task: secstr8, metric: accuracy, metric_label: Q8}
+      - {task: rsa, metric: spearman, metric_label: "Spearman \u03C1"}
+      - {task: disorder, metric: spearman, metric_label: "Spearman \u03C1"}
+      - {task: meltome, metric: spearman, metric_label: "Spearman \u03C1"}
+      - {task: subloc, metric: accuracy, metric_label: Accuracy}
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        variant: best_task
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: structural_best_overall
+    title: Structural Family
+    split: test
+    variant: best_overall
+    datasets: &eval_structural
+      - {task: secstr, metric: accuracy, metric_label: Q3}
+      - {task: secstr8, metric: accuracy, metric_label: Q8}
+      - {task: rsa, metric: spearman, metric_label: "Spearman \u03C1"}
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        variant: best_task
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA structural r4
+        run: {section: accgrad_lora, id: esmc_300m_secstr_secstr8_rsa_r4}
+      - label: AccGrad-LoRA structural r16
+        run: {section: accgrad_lora, id: esmc_300m_secstr_secstr8_rsa_r16}
+      - label: Align-LoRA structural r4
+        run: {section: align_lora, id: esmc_300m_secstr_secstr8_rsa_r4}
+      - label: Align-LoRA structural r16
+        run: {section: align_lora, id: esmc_300m_secstr_secstr8_rsa_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: gpsite_best_overall
+    title: Binding-site family
+    split: test
+    variant: best_overall
+    datasets: &eval_gpsite
+      - {task: gpsite_dna, metric: mcc, metric_label: MCC}
+      - {task: gpsite_rna, metric: mcc, metric_label: MCC}
+      - {task: gpsite_pep, metric: mcc, metric_label: MCC}
+      - {task: gpsite_pro, metric: mcc, metric_label: MCC}
+      - {task: gpsite_atp, metric: mcc, metric_label: MCC}
+      - {task: gpsite_hem, metric: mcc, metric_label: MCC}
+      - {task: gpsite_zn, metric: mcc, metric_label: MCC}
+      - {task: gpsite_ca, metric: mcc, metric_label: MCC}
+      - {task: gpsite_mg, metric: mcc, metric_label: MCC}
+      - {task: gpsite_mn, metric: mcc, metric_label: MCC}
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        variant: best_task
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA binding r4
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r4}
+      - label: AccGrad-LoRA binding r16
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r16}
+      - label: Align-LoRA binding r4
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r4}
+      - label: Align-LoRA binding r16
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  # --- best_task variant evaluations ---
+
+  - id: all_tasks_best_task
+    title: All 16 Tasks
+    split: test
+    variant: best_task
+    datasets: *eval_all_tasks
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: non_gpsite_best_task
+    title: Non-binding tasks
+    split: test
+    variant: best_task
+    datasets: *eval_non_gpsite
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: structural_best_task
+    title: Structural Family
+    split: test
+    variant: best_task
+    datasets: *eval_structural
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA structural r4
+        run: {section: accgrad_lora, id: esmc_300m_secstr_secstr8_rsa_r4}
+      - label: AccGrad-LoRA structural r16
+        run: {section: accgrad_lora, id: esmc_300m_secstr_secstr8_rsa_r16}
+      - label: Align-LoRA structural r4
+        run: {section: align_lora, id: esmc_300m_secstr_secstr8_rsa_r4}
+      - label: Align-LoRA structural r16
+        run: {section: align_lora, id: esmc_300m_secstr_secstr8_rsa_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: gpsite_best_task
+    title: Binding-site family
+    split: test
+    variant: best_task
+    datasets: *eval_gpsite
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA binding r4
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r4}
+      - label: AccGrad-LoRA binding r16
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r16}
+      - label: Align-LoRA binding r4
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r4}
+      - label: Align-LoRA binding r16
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  # --- best_loss_overall variant evaluations ---
+
+  - id: all_tasks_best_loss_overall
+    title: All 16 Tasks
+    split: test
+    variant: best_loss_overall
+    datasets: *eval_all_tasks
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        variant: best_loss_task
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: non_gpsite_best_loss_overall
+    title: Non-binding tasks
+    split: test
+    variant: best_loss_overall
+    datasets: *eval_non_gpsite
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        variant: best_loss_task
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: structural_best_loss_overall
+    title: Structural Family
+    split: test
+    variant: best_loss_overall
+    datasets: *eval_structural
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        variant: best_loss_task
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA structural r4
+        run: {section: accgrad_lora, id: esmc_300m_secstr_secstr8_rsa_r4}
+      - label: AccGrad-LoRA structural r16
+        run: {section: accgrad_lora, id: esmc_300m_secstr_secstr8_rsa_r16}
+      - label: Align-LoRA structural r4
+        run: {section: align_lora, id: esmc_300m_secstr_secstr8_rsa_r4}
+      - label: Align-LoRA structural r16
+        run: {section: align_lora, id: esmc_300m_secstr_secstr8_rsa_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: gpsite_best_loss_overall
+    title: Binding-site family
+    split: test
+    variant: best_loss_overall
+    datasets: *eval_gpsite
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        variant: best_loss_task
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA binding r4
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r4}
+      - label: AccGrad-LoRA binding r16
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r16}
+      - label: Align-LoRA binding r4
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r4}
+      - label: Align-LoRA binding r16
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  # --- best_loss_task variant evaluations ---
+
+  - id: all_tasks_best_loss_task
+    title: All 16 Tasks
+    split: test
+    variant: best_loss_task
+    datasets: *eval_all_tasks
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: non_gpsite_best_loss_task
+    title: Non-binding tasks
+    split: test
+    variant: best_loss_task
+    datasets: *eval_non_gpsite
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: structural_best_loss_task
+    title: Structural Family
+    split: test
+    variant: best_loss_task
+    datasets: *eval_structural
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA structural r4
+        run: {section: accgrad_lora, id: esmc_300m_secstr_secstr8_rsa_r4}
+      - label: AccGrad-LoRA structural r16
+        run: {section: accgrad_lora, id: esmc_300m_secstr_secstr8_rsa_r16}
+      - label: Align-LoRA structural r4
+        run: {section: align_lora, id: esmc_300m_secstr_secstr8_rsa_r4}
+      - label: Align-LoRA structural r16
+        run: {section: align_lora, id: esmc_300m_secstr_secstr8_rsa_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: gpsite_best_loss_task
+    title: Binding-site family
+    split: test
+    variant: best_loss_task
+    datasets: *eval_gpsite
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA binding r4
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r4}
+      - label: AccGrad-LoRA binding r16
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r16}
+      - label: Align-LoRA binding r4
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r4}
+      - label: Align-LoRA binding r16
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  # --- All-families comparison (all task columns, family models show N/A for tasks they don't cover) ---
+
+  - id: all_families_best_overall
+    title: All Task Families
+    split: test
+    variant: best_overall
+    datasets: *eval_all_tasks
+    baseline: *baseline_single_task_r4
+    approaches: &all_families_approaches
+      - label: Single-task Heads-only
+        variant: best_task
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA structural r4
+        run: {section: accgrad_lora, id: esmc_300m_secstr_secstr8_rsa_r4}
+      - label: AccGrad-LoRA structural r16
+        run: {section: accgrad_lora, id: esmc_300m_secstr_secstr8_rsa_r16}
+      - label: Align-LoRA structural r4
+        run: {section: align_lora, id: esmc_300m_secstr_secstr8_rsa_r4}
+      - label: Align-LoRA structural r16
+        run: {section: align_lora, id: esmc_300m_secstr_secstr8_rsa_r16}
+      - label: AccGrad-LoRA binding r4
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r4}
+      - label: AccGrad-LoRA binding r16
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r16}
+      - label: Align-LoRA binding r4
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r4}
+      - label: Align-LoRA binding r16
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: all_families_best_task
+    title: All Task Families
+    split: test
+    variant: best_task
+    datasets: *eval_all_tasks
+    baseline: *baseline_single_task_r4
+    approaches: *all_families_approaches
+
+  - id: all_families_best_loss_overall
+    title: All Task Families
+    split: test
+    variant: best_loss_overall
+    datasets: *eval_all_tasks
+    baseline: *baseline_single_task_r4
+    approaches: *all_families_approaches
+
+  - id: all_families_best_loss_task
+    title: All Task Families
+    split: test
+    variant: best_loss_task
+    datasets: *eval_all_tasks
+    baseline: *baseline_single_task_r4
+    approaches: *all_families_approaches
+
+  - id: all_families_no_meltome_best_overall
+    title: "All Task Families (excl. Meltome)"
+    split: test
+    variant: best_overall
+    datasets: &eval_all_tasks_no_meltome
+      - {task: secstr, metric: accuracy, metric_label: Q3}
+      - {task: secstr8, metric: accuracy, metric_label: Q8}
+      - {task: rsa, metric: spearman, metric_label: "Spearman \u03C1"}
+      - {task: disorder, metric: spearman, metric_label: "Spearman \u03C1"}
+      - {task: subloc, metric: accuracy, metric_label: Accuracy}
+      - {task: gpsite_dna, metric: mcc, metric_label: MCC}
+      - {task: gpsite_rna, metric: mcc, metric_label: MCC}
+      - {task: gpsite_pep, metric: mcc, metric_label: MCC}
+      - {task: gpsite_pro, metric: mcc, metric_label: MCC}
+      - {task: gpsite_atp, metric: mcc, metric_label: MCC}
+      - {task: gpsite_hem, metric: mcc, metric_label: MCC}
+      - {task: gpsite_zn, metric: mcc, metric_label: MCC}
+      - {task: gpsite_ca, metric: mcc, metric_label: MCC}
+      - {task: gpsite_mg, metric: mcc, metric_label: MCC}
+      - {task: gpsite_mn, metric: mcc, metric_label: MCC}
+    baseline: *baseline_single_task_r4
+    approaches: *all_families_approaches
+
+  - id: all_families_no_meltome_best_task
+    title: "All Task Families (excl. Meltome)"
+    split: test
+    variant: best_task
+    datasets: *eval_all_tasks_no_meltome
+    baseline: *baseline_single_task_r4
+    approaches: *all_families_approaches
+
+  - id: all_families_no_meltome_best_loss_overall
+    title: "All Task Families (excl. Meltome)"
+    split: test
+    variant: best_loss_overall
+    datasets: *eval_all_tasks_no_meltome
+    baseline: *baseline_single_task_r4
+    approaches: *all_families_approaches
+
+  - id: all_families_no_meltome_best_loss_task
+    title: "All Task Families (excl. Meltome)"
+    split: test
+    variant: best_loss_task
+    datasets: *eval_all_tasks_no_meltome
+    baseline: *baseline_single_task_r4
+    approaches: *all_families_approaches
+
+auprc_evaluations:
+  - id: gpsite_auprc_best_overall
+    split: test
+    variant: best_overall
+    tasks: &auprc_gpsite_tasks
+      - gpsite_dna
+      - gpsite_rna
+      - gpsite_pep
+      - gpsite_pro
+      - gpsite_atp
+      - gpsite_hem
+      - gpsite_zn
+      - gpsite_ca
+      - gpsite_mg
+      - gpsite_mn
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        variant: best_task
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA binding r4
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r4}
+      - label: AccGrad-LoRA binding r16
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r16}
+      - label: Align-LoRA binding r4
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r4}
+      - label: Align-LoRA binding r16
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: gpsite_auprc_best_task
+    split: test
+    variant: best_task
+    tasks: *auprc_gpsite_tasks
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA binding r4
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r4}
+      - label: AccGrad-LoRA binding r16
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r16}
+      - label: Align-LoRA binding r4
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r4}
+      - label: Align-LoRA binding r16
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: gpsite_auprc_best_loss_overall
+    split: test
+    variant: best_loss_overall
+    tasks: *auprc_gpsite_tasks
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        variant: best_loss_task
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA binding r4
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r4}
+      - label: AccGrad-LoRA binding r16
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r16}
+      - label: Align-LoRA binding r4
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r4}
+      - label: Align-LoRA binding r16
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+  - id: gpsite_auprc_best_loss_task
+    split: test
+    variant: best_loss_task
+    tasks: *auprc_gpsite_tasks
+    baseline: *baseline_single_task_r4
+    approaches:
+      - label: Single-task Heads-only
+        delta_summary: false
+        run: {section: heads_only, id: esmc_300m_all_heads_only}
+      - label: Single-task LoRA r16
+        runs: *single_task_r16_runs
+      - label: AccGrad-LoRA binding r4
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r4}
+      - label: AccGrad-LoRA binding r16
+        run: {section: accgrad_lora, id: esmc_300m_gpsite_all_r16}
+      - label: Align-LoRA binding r4
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r4}
+      - label: Align-LoRA binding r16
+        run: {section: align_lora, id: esmc_300m_gpsite_all_r16}
+      - label: AccGrad-LoRA all r4
+        run: {section: accgrad_lora, id: esmc_300m_all_r4}
+      - label: AccGrad-LoRA all r16
+        run: {section: accgrad_lora, id: esmc_300m_all_r16}
+      - label: Align-LoRA all r4
+        run: {section: align_lora, id: esmc_300m_all_r4}
+      - label: Align-LoRA all r16
+        run: {section: align_lora, id: esmc_300m_all_r16}
+
+parameter_counts:
+  include_runs:
+  - heads_only/esmc_300m_all_heads_only
+  - lora/esmc_300m_secstr_r4
+  - lora/esmc_300m_secstr_r16
+  - accgrad_lora/esmc_300m_all_r4
+  - accgrad_lora/esmc_300m_all_r16
+  - align_lora/esmc_300m_all_r4
+  - align_lora/esmc_300m_all_r16
+
+default_hyperparams: &default_hyperparams
+  batch: 8
+  lr: 0.0003
+  dropout: 0.1
+  warmup_ratio: 0.0
+  auto_mixed_precision: true
+  early_stopping_patience: 5
+
+train:
+  validate_every_n_train_batches: 1000
+  embedding_cache_dir: .cache/embeddings
+  training_checkpoint_dir: .cache/training_checkpoints
+  checkpoint_every_n_validations: 10
+
+  heads_only:
+  # --- ESM-C 300M heads-only run (all tasks) ---
+  - id: esmc_300m_all_heads_only
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#a9a9a9'
+    tasks: &all_tasks
+    - secstr
+    - secstr8
+    - disorder
+    - rsa
+    - meltome
+    - subloc
+    - gpsite_dna
+    - gpsite_rna
+    - gpsite_pep
+    - gpsite_pro
+    - gpsite_atp
+    - gpsite_hem
+    - gpsite_zn
+    - gpsite_ca
+    - gpsite_mg
+    - gpsite_mn
+
+  lora:
+  # --- ESM-C 300M single-task LoRA r4 runs ---
+  - id: esmc_300m_secstr_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - secstr
+
+  - id: esmc_300m_secstr8_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - secstr8
+
+  - id: esmc_300m_disorder_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - disorder
+
+  - id: esmc_300m_rsa_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - rsa
+
+  - id: esmc_300m_meltome_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - meltome
+
+  - id: esmc_300m_subloc_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - subloc
+
+  - id: esmc_300m_gpsite_dna_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_dna
+
+  - id: esmc_300m_gpsite_rna_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_rna
+
+  - id: esmc_300m_gpsite_pep_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_pep
+
+  - id: esmc_300m_gpsite_pro_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_pro
+
+  - id: esmc_300m_gpsite_atp_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_atp
+
+  - id: esmc_300m_gpsite_hem_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_hem
+
+  - id: esmc_300m_gpsite_zn_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_zn
+
+  - id: esmc_300m_gpsite_ca_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_ca
+
+  - id: esmc_300m_gpsite_mg_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_mg
+
+  - id: esmc_300m_gpsite_mn_r4
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#4a90d9'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_mn
+
+  # --- ESM-C 300M single-task LoRA r16 runs ---
+  - id: esmc_300m_secstr_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - secstr
+
+  - id: esmc_300m_secstr8_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - secstr8
+
+  - id: esmc_300m_disorder_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - disorder
+
+  - id: esmc_300m_rsa_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - rsa
+
+  - id: esmc_300m_meltome_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - meltome
+
+  - id: esmc_300m_subloc_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - subloc
+
+  - id: esmc_300m_gpsite_dna_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - gpsite_dna
+
+  - id: esmc_300m_gpsite_rna_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - gpsite_rna
+
+  - id: esmc_300m_gpsite_pep_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - gpsite_pep
+
+  - id: esmc_300m_gpsite_pro_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - gpsite_pro
+
+  - id: esmc_300m_gpsite_atp_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - gpsite_atp
+
+  - id: esmc_300m_gpsite_hem_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - gpsite_hem
+
+  - id: esmc_300m_gpsite_zn_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - gpsite_zn
+
+  - id: esmc_300m_gpsite_ca_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - gpsite_ca
+
+  - id: esmc_300m_gpsite_mg_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - gpsite_mg
+
+  - id: esmc_300m_gpsite_mn_r16
+    <<: *default_hyperparams
+    max_validations: 40
+    checkpoint: esmc_300m
+    color: '#5ec4c4'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks:
+    - gpsite_mn
+
+  accgrad_lora:
+  # --- ESM-C 300M AccGrad LoRA runs ---
+  - id: esmc_300m_all_r4
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#ffe119'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks: *all_tasks
+
+  - id: esmc_300m_all_r16
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#ffd8b1'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks: *all_tasks
+
+  - id: esmc_300m_secstr_secstr8_rsa_r4
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#fffac8'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks: &secstr_secstr8_rsa_tasks
+    - secstr
+    - secstr8
+    - rsa
+
+  - id: esmc_300m_secstr_secstr8_rsa_r16
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#9a6324'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks: *secstr_secstr8_rsa_tasks
+
+  - id: esmc_300m_gpsite_all_r4
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#d2f53c'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks: &gpsite_all_tasks
+    - gpsite_dna
+    - gpsite_rna
+    - gpsite_pep
+    - gpsite_pro
+    - gpsite_atp
+    - gpsite_hem
+    - gpsite_zn
+    - gpsite_ca
+    - gpsite_mg
+    - gpsite_mn
+
+  - id: esmc_300m_gpsite_all_r16
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#469990'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks: *gpsite_all_tasks
+
+  align_lora:
+  # --- ESM-C 300M Align LoRA runs ---
+  - id: esmc_300m_all_r4
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#dcbeff'
+    lora_rank: 4
+    lora_alpha: 4
+    align_lora_kl_lambda: 0.01
+    gradient_checkpointing: true
+    tasks: *all_tasks
+
+  - id: esmc_300m_all_r16
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#aaffc3'
+    lora_rank: 16
+    lora_alpha: 16
+    align_lora_kl_lambda: 0.01
+    gradient_checkpointing: true
+    tasks: *all_tasks
+
+  - id: esmc_300m_secstr_secstr8_rsa_r4
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#ffd8b1'
+    lora_rank: 4
+    lora_alpha: 4
+    align_lora_kl_lambda: 0.01
+    gradient_checkpointing: true
+    tasks: *secstr_secstr8_rsa_tasks
+
+  - id: esmc_300m_secstr_secstr8_rsa_r16
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#808000'
+    lora_rank: 16
+    lora_alpha: 16
+    align_lora_kl_lambda: 0.01
+    gradient_checkpointing: true
+    tasks: *secstr_secstr8_rsa_tasks
+
+  - id: esmc_300m_gpsite_all_r4
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#000075'
+    lora_rank: 4
+    lora_alpha: 4
+    align_lora_kl_lambda: 0.01
+    gradient_checkpointing: true
+    tasks: *gpsite_all_tasks
+
+  - id: esmc_300m_gpsite_all_r16
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#800000'
+    lora_rank: 16
+    lora_alpha: 16
+    align_lora_kl_lambda: 0.01
+    gradient_checkpointing: true
+    tasks: *gpsite_all_tasks
+
+# ── ONNX export + HuggingFace upload ──
+
+onnx_export:
+- section: accgrad_lora
+  id: esmc_300m_all_r4
+  variant: best_overall
+  splits: [test]
+- section: align_lora
+  id: esmc_300m_all_r4
+  variant: best_overall
+  splits: [test]
+
+huggingface:
+  repo_id: Moomboh/ESMC-300M-mutafitup
+  datasets_repo_id: Moomboh/mutafitup-datasets

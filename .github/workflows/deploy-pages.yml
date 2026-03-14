@@ -1,0 +1,86 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  MUTAFITUP_MODELS_URL: https://huggingface.co/Moomboh/ESMC-300M-mutafitup/resolve/main
+
+jobs:
+  build:
+    # TODO: remove 'if: false' to enable this workflow once ready
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app
+
+      - uses: extractions/setup-just@v2
+
+      - name: Install Dioxus CLI
+        uses: cargo-bins/cargo-binstall@main
+      - run: cargo binstall dioxus-cli@0.7.1 --no-confirm
+
+      - name: Fetch onnxruntime-web vendor files
+        run: just fetch-ort-web
+        working-directory: app
+
+      - name: Build web SPA
+        run: dx build --web --features web --no-default-features --release
+        working-directory: app
+
+      - name: Bundle ORT runtime and coi-serviceworker
+        run: |
+          OUT="app/target/dx/mutafitup-app/release/web/public"
+
+          # Copy vendored onnxruntime-web files into the output
+          mkdir -p "$OUT/__ort__"
+          cp app/vendor/onnxruntime-web/*.js "$OUT/__ort__/"
+          cp app/vendor/onnxruntime-web/*.mjs "$OUT/__ort__/"
+          cp app/vendor/onnxruntime-web/*.wasm "$OUT/__ort__/"
+
+          # Download coi-serviceworker for cross-origin isolation
+          # (SharedArrayBuffer requires COOP/COEP headers; GitHub Pages
+          # does not support custom headers, so a service worker injects
+          # them client-side)
+          curl -sL \
+            "https://cdn.jsdelivr.net/npm/coi-serviceworker@0.1.7/coi-serviceworker.min.js" \
+            -o "$OUT/coi-serviceworker.min.js"
+
+          # Inject the service worker script into index.html (before </head>)
+          sed -i 's|</head>|<script src="/coi-serviceworker.min.js"></script>\n</head>|' \
+            "$OUT/index.html"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/target/dx/mutafitup-app/release/web/public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

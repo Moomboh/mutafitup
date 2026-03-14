@@ -1,0 +1,55 @@
+[package]
+name = "mutafitup-app"
+version = "0.1.0"
+authors = ["Elias Kahl <contact@elias.works>"]
+edition = "2021"
+
+[dependencies]
+dioxus = { version = "0.7.1", features = ["router"] }
+dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+web-time = "1"
+needletail = { version = "0.6", default-features = false }
+# Use fancy-regex (pure Rust) instead of onig (C library) for cross-platform
+# compatibility. The `unstable_wasm` feature enables fancy-regex + getrandom/wasm_js.
+tokenizers = { version = "0.22", default-features = false, features = ["unstable_wasm"] }
+ort = { version = "=2.0.0-rc.12", default-features = false, features = ["std"] }
+
+# Native-only dependencies
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+ort = { version = "=2.0.0-rc.12", features = ["download-binaries", "copy-dylibs", "coreml", "directml"] }
+bincode = "1"
+ureq = "3"
+dirs = "6"
+tokio = { version = "1", features = ["sync", "macros"] }
+
+# WASM-only dependencies
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+ort = { version = "=2.0.0-rc.12", default-features = false, features = ["alternative-backend"] }
+ort-web = "0.2"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = [
+    "Window", "Navigator", "Response", "Location", "Headers",
+    "ReadableStream", "ReadableStreamDefaultReader",
+    "StorageManager",
+    "File",
+    "FileSystemDirectoryHandle", "FileSystemFileHandle",
+    "FileSystemGetDirectoryOptions", "FileSystemGetFileOptions",
+    "FileSystemWritableFileStream",
+    "console",
+] }
+gloo-timers = { version = "0.3", features = ["futures"] }
+
+[features]
+default = ["web"]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
+mobile = ["dioxus/mobile"]
+cuda = ["ort/cuda"]
+tensorrt = ["ort/tensorrt"]
+rocm = ["ort/rocm"]
+openvino = ["ort/openvino"]

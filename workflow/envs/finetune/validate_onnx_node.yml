@@ -1,0 +1,5 @@
+channels:
+  - conda-forge
+dependencies:
+  - nodejs>=24,<25
+  - pnpm>=10,<11

@@ -1,0 +1,27 @@
+configfile: config/config_dev.yml
+
+use-conda: true
+cores: all
+
+resources:
+  gpu: 1
+
+set-resources:
+  finetune_heads_only:
+    gpu: 1
+  finetune_lora:
+    gpu: 1
+  finetune_accgrad_lora:
+    gpu: 1
+  finetune_align_lora:
+    gpu: 1
+  predict:
+    gpu: 1
+  resplit_mmseqs_cluster:
+    gpu: 1
+  resplit_foldseek_cluster:
+    gpu: 1
+  leakage_mmseqs_search:
+    gpu: 1
+  leakage_foldseek_search:
+    gpu: 1

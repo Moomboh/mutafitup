@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mutafitup"
+version = "0.1.0"
+description = "Mutation Fitness Prediction using Protein Language Models"
+authors = [{name = "Elias Kahl", email = "contact@elias.works"}]
+requires-python = ">=3.11,<3.13"
+license = "MIT"
+dependencies = [
+    "torch==2.10.0",
+    "transformers==4.48.1",
+    "peft==0.18.1",
+    "numpy==2.4.2",
+    "scipy==1.17.1",
+    "scikit-learn==1.8.0",
+    "evaluate==0.4.6",
+    "sentencepiece==0.2.1",
+    "matplotlib==3.10.8",
+    "torchmetrics==1.8.2",
+    "esm==3.2.3",
+    "flash-attn>=2.7.0; sys_platform == 'linux'",
+]
+
+[project.urls]
+Repository = "https://github.com/Moomboh/mutafitup"
+
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["mutafitup*", "wfutils*"]
+
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: marks tests that load real models and require significant resources (deselect with '-m \"not integration\"')",
+]
+
+
+[dependency-groups]
+dev = [
+    "ruff==0.14.3",
+    "pyrefly>=0.44.2",
+    "pytest-cov>=7.0.0",
+    "pytest-xdist>=3.8.0",
+]

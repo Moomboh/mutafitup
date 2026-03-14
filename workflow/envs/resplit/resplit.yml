@@ -1,0 +1,9 @@
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.12,<3.13
+  - pandas>=2.3.0
+  - pyarrow>=22.0.0
+  - numpy>=2.3.0
+  - networkx>=3.0
+  - pip

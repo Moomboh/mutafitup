@@ -1,0 +1,478 @@
+datasets:
+  schmirler_2024:
+    url: https://raw.githubusercontent.com/RSchmirler/data-repo_plm-finetune-eval/refs/heads/main/training%20data.zip
+    hash: 992eb23605d864ec4b1be1b91eafad2739baa7b6a8cfc883f1f660f44cc3e8aa
+    subsets:
+    - name: subloc
+      type: per_protein_classification
+    - name: meltome
+      type: per_protein_regression
+    - name: disorder
+      type: per_residue_regression
+
+  gpsite:
+    commit: 58cfa4e59f077e531fb38cf4a04bec6aea706454
+    base_url: https://raw.githubusercontent.com/biomed-AI/GPSite
+    cluster_min_seq_id: 0.2
+    valid_cluster_fraction: 0.1
+    random_seed: 42
+    subsets:
+    - name: gpsite_dna
+      type: per_residue_classification
+      ligand: DNA
+    - name: gpsite_atp
+      type: per_residue_classification
+      ligand: ATP
+    - name: gpsite_zn
+      type: per_residue_classification
+      ligand: ZN
+
+  netsurfp2:
+    urls:
+      train_npz: https://services.healthtech.dtu.dk/services/NetSurfP-2.0/training_data/Train_HHblits.npz
+      cb513_npz: https://services.healthtech.dtu.dk/services/NetSurfP-2.0/training_data/CB513_HHblits.npz
+      new364: https://www.dropbox.com/s/g49lb352ij4cnt7/NEW364.csv?dl=1
+    hashes:
+      train_npz: a6e08d113848382b8436f71ece943434f38484d92d95e72cd700a326011188da
+      cb513_npz: 88908e2db238247a97027cd01e1cc623b31c41ef540ceca3d6de9affb6c6d2e2
+      new364: 2e7b9ff90988b892543e21173f3d061967b415f1522174723fb29087ce14c940
+    cluster_min_seq_id: 0.2
+    valid_cluster_fraction: 0.1
+    random_seed: 42
+    subsets:
+    - name: secstr8
+      type: per_residue_classification
+    - name: secstr
+      type: per_residue_classification
+    - name: rsa
+      type: per_residue_regression
+
+standardized_datasets:
+  per_protein_regression:
+    meltome:
+      color: '#e6194b'
+      primary_metric: spearman
+
+  per_protein_classification:
+    subloc:
+      color: '#3cb44b'
+      num_labels: 10
+      primary_metric: accuracy
+
+  per_residue_classification:
+    secstr:
+      color: '#4363d8'
+      num_labels: 3
+      primary_metric: accuracy
+    secstr8:
+      color: '#f58231'
+      num_labels: 8
+      primary_metric: accuracy
+    gpsite_dna:
+      color: '#f032e6'
+      num_labels: 2
+      primary_metric: accuracy
+    gpsite_atp:
+      color: '#bcf60c'
+      num_labels: 2
+      primary_metric: accuracy
+    gpsite_zn:
+      color: '#808000'
+      num_labels: 2
+      primary_metric: accuracy
+
+  per_residue_regression:
+    disorder:
+      color: '#911eb4'
+      primary_metric: spearman
+    rsa:
+      color: '#46f0f0'
+      primary_metric: spearman
+
+data_stats:
+  histogram_bins:
+    seq_length: 20
+    score: 20
+
+representation_eval:
+  enabled: true
+  swissprot:
+    version: "2026_01"
+    # This current_release URL may move to a newer release in the future.
+    # The pinned version string and SHA256 are the real reproducibility anchors.
+    url: https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
+    hash: 5ba5cb332fc7794ab1c02075a79c8b3d95b573f9b244a38bb53558172e1f9b7b
+  search:
+    min_seq_id: 0.5
+    min_query_coverage: 0.8
+    min_target_coverage: 0.8
+    gpu: 0
+  annotations:
+    batch_size: 100
+  embeddings:
+    batch_size: 8
+    frozen_checkpoints:
+      - esmc_300m
+    include_sections:
+      - heads_only
+      - lora
+      - accgrad_lora
+      - align_lora
+
+resplit:
+  tools:
+    mmseqs:
+      enabled: true
+      min_seq_id: 0.2
+      gpu: 0
+    foldseek:
+      enabled: false
+      min_seq_id: 0.2
+      gpu: 0
+  min_valid_fraction: 0.1
+  random_seed: 42
+  datasets:
+    - secstr
+    - secstr8
+    - disorder
+    - rsa
+    - meltome
+    - subloc
+    - gpsite_dna
+    - gpsite_atp
+    - gpsite_zn
+  shared_protein_groups:
+    - [secstr, secstr8, rsa]
+  reconstruct_test:
+    datasets: [meltome]
+    min_test_fraction: 0.1
+  aggregate_duplicates:
+    meltome:
+      strategy: mean
+
+leakage_analysis:
+  profiles:
+    mmseqs_20:
+      datasets:
+      - secstr
+      - disorder
+      - rsa
+      - meltome
+      - subloc
+      - gpsite_dna
+      - gpsite_atp
+      - gpsite_zn
+      tools:
+        mmseqs:
+          enabled: true
+          min_seq_id: 0.2
+          gpu: 0
+        foldseek:
+          enabled: false
+          min_seq_id: 0.2
+          gpu: 0
+    mmseqs_50:
+      datasets:
+      - secstr
+      - disorder
+      - rsa
+      - meltome
+      - subloc
+      - gpsite_dna
+      - gpsite_atp
+      - gpsite_zn
+      tools:
+        mmseqs:
+          enabled: true
+          min_seq_id: 0.5
+          gpu: 0
+        foldseek:
+          enabled: false
+          min_seq_id: 0.5
+          gpu: 0
+
+predictions:
+  variants:
+  - variant: best_overall
+    splits: [valid]
+  extra: {}
+
+onnx_export:
+- section: accgrad_lora
+  id: esmc_300m_all_r4
+  variant: best_overall
+  splits: [valid]
+- section: heads_only
+  id: prot_t5_xl_all_heads_only
+  variant: best_overall
+  splits: [valid]
+- section: accgrad_lora
+  id: esm2_t6_8M_all_r16
+  variant: best_overall
+  splits: [valid]
+- section: align_lora
+  id: esm2_t6_8M_all_r4
+  variant: best_overall
+  splits: [valid]
+- section: lora
+  id: esm2_t6_8M_meltome_r4
+  variant: best_overall
+  splits: [valid]
+
+metrics:
+  num_bootstraps: 100
+  bootstrap_seed: 42
+  per_residue_classification:
+  - accuracy
+  - f1_macro
+  - mcc
+  per_residue_regression:
+  - spearman
+  - pearson
+  per_protein_classification:
+  - accuracy
+  - f1_macro
+  - mcc
+  per_protein_regression:
+  - spearman
+  - pearson
+
+evaluations:
+- id: single_vs_multi_esm2_t6
+  split: valid
+  variant: best_overall
+  datasets:
+  - task: secstr
+    metric: accuracy
+  - task: secstr8
+    metric: accuracy
+  - task: disorder
+    metric: spearman
+  - task: rsa
+    metric: spearman
+  - task: meltome
+    metric: spearman
+  - task: subloc
+    metric: accuracy
+  - task: gpsite_dna
+    metric: accuracy
+  - task: gpsite_atp
+    metric: accuracy
+  - task: gpsite_zn
+    metric: accuracy
+  baseline:
+    runs:
+      secstr:
+        section: lora
+        id: esm2_t6_8M_secstr_r4
+      secstr8:
+        section: lora
+        id: esm2_t6_8M_secstr8_r4
+      disorder:
+        section: lora
+        id: esm2_t6_8M_disorder_r4
+      rsa:
+        section: lora
+        id: esm2_t6_8M_rsa_r4
+      meltome:
+        section: lora
+        id: esm2_t6_8M_meltome_r4
+      subloc:
+        section: lora
+        id: esm2_t6_8M_subloc_r4
+      gpsite_dna:
+        section: lora
+        id: esm2_t6_8M_gpsite_dna_r4
+      gpsite_atp:
+        section: lora
+        id: esm2_t6_8M_gpsite_atp_r4
+      gpsite_zn:
+        section: lora
+        id: esm2_t6_8M_gpsite_zn_r4
+  approaches:
+  - label: "MT AccGrad LoRA r4"
+    run:
+      section: accgrad_lora
+      id: esm2_t6_8M_all_r4
+  - label: "MT AccGrad LoRA r16"
+    run:
+      section: accgrad_lora
+      id: esm2_t6_8M_all_r16
+  - label: "MT Align LoRA ESM-C r4"
+    run:
+      section: accgrad_lora
+      id: esmc_300m_all_r4
+  - label: "MT Heads Only ProtT5-XL"
+    run:
+      section: heads_only
+      id: prot_t5_xl_all_heads_only
+
+default_hyperparams: &default_hyperparams
+  batch: 8
+  max_validations: 5
+  lr: 0.0003
+  dropout: 0.1
+  warmup_ratio: 0.0
+  auto_mixed_precision: true
+  early_stopping_patience: 3
+
+subsample:
+  train_frac: 0.03
+  valid_frac: 0.03
+  test_frac: 0.03
+  min_rows: 8
+  random_seed: 42
+
+train:
+  validate_every_n_train_batches: 3
+  embedding_cache_dir: .cache/embeddings
+  training_checkpoint_dir: .cache/training_checkpoints
+  checkpoint_every_n_validations: 3
+
+  lora:
+  # --- ESM-2 t6 8M single-task runs (dev subset) ---
+  - id: esm2_t6_8M_secstr_r4
+    <<: *default_hyperparams
+    checkpoint: facebook/esm2_t6_8M_UR50D
+    color: '#4363d8'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - secstr
+
+  - id: esm2_t6_8M_secstr8_r4
+    <<: *default_hyperparams
+    checkpoint: facebook/esm2_t6_8M_UR50D
+    color: '#f58231'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - secstr8
+
+  - id: esm2_t6_8M_disorder_r4
+    <<: *default_hyperparams
+    checkpoint: facebook/esm2_t6_8M_UR50D
+    color: '#911eb4'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - disorder
+
+  - id: esm2_t6_8M_rsa_r4
+    <<: *default_hyperparams
+    checkpoint: facebook/esm2_t6_8M_UR50D
+    color: '#46f0f0'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - rsa
+
+  - id: esm2_t6_8M_meltome_r4
+    <<: *default_hyperparams
+    checkpoint: facebook/esm2_t6_8M_UR50D
+    color: '#e6194b'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - meltome
+
+  - id: esm2_t6_8M_subloc_r4
+    <<: *default_hyperparams
+    checkpoint: facebook/esm2_t6_8M_UR50D
+    color: '#3cb44b'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - subloc
+
+  - id: esm2_t6_8M_gpsite_dna_r4
+    <<: *default_hyperparams
+    checkpoint: facebook/esm2_t6_8M_UR50D
+    color: '#f032e6'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_dna
+
+  - id: esm2_t6_8M_gpsite_atp_r4
+    <<: *default_hyperparams
+    checkpoint: facebook/esm2_t6_8M_UR50D
+    color: '#bcf60c'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_atp
+
+  - id: esm2_t6_8M_gpsite_zn_r4
+    <<: *default_hyperparams
+    checkpoint: facebook/esm2_t6_8M_UR50D
+    color: '#808000'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - gpsite_zn
+
+  accgrad_lora:
+  # --- ESM-2 t6 8M multitask runs (dev subset) ---
+  - id: esm2_t6_8M_all_r4
+    <<: *default_hyperparams
+    checkpoint: facebook/esm2_t6_8M_UR50D
+    color: '#ffe119'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks: &dev_tasks
+    - secstr
+    - secstr8
+    - disorder
+    - rsa
+    - meltome
+    - subloc
+    - gpsite_dna
+    - gpsite_atp
+    - gpsite_zn
+
+  - id: esm2_t6_8M_all_r16
+    <<: *default_hyperparams
+    checkpoint: facebook/esm2_t6_8M_UR50D
+    color: '#ffd8b1'
+    lora_rank: 16
+    lora_alpha: 16
+    tasks: *dev_tasks
+
+  # --- ESM-C 300M multitask multitask-lora run (dev subset) ---
+  - id: esmc_300m_all_r4
+    <<: *default_hyperparams
+    checkpoint: esmc_300m
+    color: '#aaffc3'
+    lora_rank: 4
+    lora_alpha: 4
+    tasks:
+    - secstr
+    - secstr8
+    - disorder
+    - rsa
+    - meltome
+    - subloc
+    - gpsite_dna
+    - gpsite_atp
+    - gpsite_zn
+
+  align_lora:
+  - id: esm2_t6_8M_all_r4
+    <<: *default_hyperparams
+    checkpoint: facebook/esm2_t6_8M_UR50D
+    color: '#ffd8b1'
+    lora_rank: 4
+    lora_alpha: 4
+    align_lora_kl_lambda: 0.01
+    tasks: *dev_tasks
+
+  heads_only:
+  # --- ProtT5-XL multitask heads-only run (dev subset) ---
+  - id: prot_t5_xl_all_heads_only
+    <<: *default_hyperparams
+    checkpoint: Rostlab/prot_t5_xl_uniref50
+    color: '#fabebe'
+    tasks:
+    - meltome
+    - subloc
