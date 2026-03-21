@@ -92,7 +92,7 @@ class MultitaskModel(nn.Module):
 
         hidden_states = self.backbone.forward(args)
 
-        logits = self.heads[task](hidden_states)
+        logits = self.heads[task](hidden_states, args.attention_mask)
         loss = None
 
         if labels is not None:
@@ -127,7 +127,7 @@ class MultitaskModel(nn.Module):
 
         config = self.head_configs[task]
 
-        logits = self.heads[task](embeddings)
+        logits = self.heads[task](embeddings, attention_mask)
         loss = None
 
         if labels is not None:

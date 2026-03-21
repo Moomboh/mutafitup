@@ -1,3 +1,5 @@
+from typing import Optional
+
 import torch
 import torch.nn as nn
 
@@ -9,7 +11,7 @@ class PerResidueRegressionHead(nn.Module):
         self.linear = nn.Linear(input_hidden_size, hidden_size)
         self.output = nn.Linear(hidden_size, 1)
 
-    def forward(self, hidden_states: torch.Tensor):
+    def forward(self, hidden_states: torch.Tensor, attention_mask: Optional[torch.Tensor] = None):
         hidden_states = self.dropout(hidden_states)
         hidden_states = self.linear(hidden_states)
         hidden_states = torch.relu(hidden_states)

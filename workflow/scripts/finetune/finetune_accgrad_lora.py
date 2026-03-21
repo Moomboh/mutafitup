@@ -17,6 +17,8 @@ from mutafitup.datasets.per_residue_regression_dataset import (
 from mutafitup.models import build_backbone_and_tokenizer
 from mutafitup.models.multitask_heads import (
     PerProteinClassificationHead,
+    PerProteinLatePoolClassificationHead,
+    PerProteinLatePoolRegressionHead,
     PerProteinRegressionHead,
     PerResidueClassificationHead,
     PerResidueRegressionHead,
@@ -72,16 +74,26 @@ def build_multitask_model(
                 raise ValueError(
                     f"num_labels is required for classification task '{name}'"
                 )
+            head_variant = task.get("head_variant", "default")
+            if head_variant == "late_pool":
+                head_cls = PerProteinLatePoolClassificationHead
+            else:
+                head_cls = PerProteinClassificationHead
             heads[name] = HeadConfig(
-                head=PerProteinClassificationHead(
+                head=head_cls(
                     dropout, hidden_size, hidden_size, num_labels
                 ),
                 problem_type="classification",
                 level="per_protein",
             )
         elif subset_type == "per_protein_regression":
+            head_variant = task.get("head_variant", "default")
+            if head_variant == "late_pool":
+                head_cls = PerProteinLatePoolRegressionHead
+            else:
+                head_cls = PerProteinRegressionHead
             heads[name] = HeadConfig(
-                head=PerProteinRegressionHead(dropout, hidden_size, hidden_size),
+                head=head_cls(dropout, hidden_size, hidden_size),
                 problem_type="regression",
                 level="per_protein",
             )

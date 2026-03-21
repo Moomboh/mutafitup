@@ -1,4 +1,10 @@
 from .per_protein_classification_head import PerProteinClassificationHead
+from .per_protein_late_pool_classification_head import (
+    PerProteinLatePoolClassificationHead,
+)
+from .per_protein_late_pool_regression_head import (
+    PerProteinLatePoolRegressionHead,
+)
 from .per_protein_regression_head import PerProteinRegressionHead
 from .per_residue_classification_head import PerResidueClassificationHead
 from .per_residue_regression_head import PerResidueRegressionHead
