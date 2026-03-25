@@ -112,6 +112,7 @@ rule finetune_heads_only:
             "checkpoint_every_n_validations", 1
         ),
         tasks=lambda wc: expand_tasks(_get_train_run_local("heads_only", wc.run)["tasks"]),
+        uncertainty_weighting=lambda wc: _get_train_run_local("heads_only", wc.run).get("uncertainty_weighting", False),
     conda:
         "../../envs/finetune/train.yml"
     log:
@@ -168,6 +169,7 @@ rule finetune_lora:
             "checkpoint_every_n_validations", 1
         ),
         tasks=lambda wc: expand_tasks(_get_train_run_local("lora", wc.run)["tasks"]),
+        uncertainty_weighting=lambda wc: _get_train_run_local("lora", wc.run).get("uncertainty_weighting", False),
     conda:
         "../../envs/finetune/train.yml"
     log:
@@ -230,6 +232,7 @@ rule finetune_accgrad_lora:
             "checkpoint_every_n_validations", 1
         ),
         tasks=lambda wc: expand_tasks(_get_train_run_local("accgrad_lora", wc.run)["tasks"]),
+        uncertainty_weighting=lambda wc: _get_train_run_local("accgrad_lora", wc.run).get("uncertainty_weighting", False),
     conda:
         "../../envs/finetune/train.yml"
     log:
@@ -298,6 +301,7 @@ rule finetune_align_lora:
             "checkpoint_every_n_validations", 1
         ),
         tasks=lambda wc: expand_tasks(_get_train_run_local("align_lora", wc.run)["tasks"]),
+        uncertainty_weighting=lambda wc: _get_train_run_local("align_lora", wc.run).get("uncertainty_weighting", False),
     conda:
         "../../envs/finetune/train.yml"
     log:

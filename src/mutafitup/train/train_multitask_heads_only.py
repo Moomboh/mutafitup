@@ -40,6 +40,7 @@ def train_multitask_heads_only(
     best_loss_overall_model_dir: Optional[str] = None,
     best_loss_task_models_dir: Optional[str] = None,
     auto_mixed_precision: bool = False,
+    uncertainty_weighting: bool = False,
 ) -> Tuple[MultitaskModel, List[Dict], Dict[str, Any]]:
     """Train a multitask model with heads-only optimization.
 
@@ -75,7 +76,7 @@ def train_multitask_heads_only(
     Returns:
         Tuple of (trained_model, history, best_checkpoints).
     """
-    strategy = HeadsOnlyStrategy()
+    strategy = HeadsOnlyStrategy(uncertainty_weighting=uncertainty_weighting)
     trainer = MultitaskTrainer(
         strategy=strategy,
         model=model,

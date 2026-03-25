@@ -8,6 +8,8 @@ import torch
 from peft import LoraConfig
 from torch import nn
 
+from mutafitup.models.uncertainty_loss_weights import UncertaintyLossWeights
+
 
 @dataclass
 class HeadConfig:
@@ -69,11 +71,13 @@ class MultitaskModel(nn.Module):
         self,
         backbone: MultitaskBackbone,
         heads: Dict[str, HeadConfig],
+        uncertainty_loss_weights: Optional[UncertaintyLossWeights] = None,
     ):
         super().__init__()
         self.backbone = backbone
         self.head_configs = heads
         self.heads = nn.ModuleDict({name: cfg.head for name, cfg in heads.items()})
+        self.uncertainty_loss_weights = uncertainty_loss_weights
 
     def enable_gradient_checkpointing(self) -> None:
         """Delegate gradient checkpointing to the backbone."""
@@ -310,7 +314,19 @@ class MultitaskModel(nn.Module):
                 ignore_index=tcfg.get("ignore_index", -100),
             )
 
-        model = cls(backbone=backbone, heads=heads)
+        uncertainty_loss_weights = None
+        if config.get("uncertainty_weighting", False):
+            problem_types = {name: cfg.problem_type for name, cfg in heads.items()}
+            uncertainty_loss_weights = UncertaintyLossWeights(
+                task_names=list(heads.keys()),
+                problem_types=problem_types,
+            )
+
+        model = cls(
+            backbone=backbone,
+            heads=heads,
+            uncertainty_loss_weights=uncertainty_loss_weights,
+        )
         model.load_state_dict(state_dict, strict=False)
 
         if device is not None:
@@ -348,13 +364,18 @@ class MultitaskModel(nn.Module):
                 "head_hidden_size": head_hidden_size,
             }
 
-        return {
+        config: Dict[str, Any] = {
             "base_checkpoint": base_checkpoint,
             "backbone_class": f"{backbone_class.__module__}.{backbone_class.__qualname__}",
             "backbone_hidden_size": getattr(self.backbone, "hidden_size", None),
             "lora_config": getattr(self.backbone, "lora_config", None),
             "tasks": tasks,
         }
+
+        if self.uncertainty_loss_weights is not None:
+            config["uncertainty_weighting"] = True
+
+        return config
 
     @staticmethod
     def _import_string(path: str):

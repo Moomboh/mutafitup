@@ -655,6 +655,17 @@ definitions:
         type: integer
         minimum: 0
         description: "Number of validations without improvement before stopping. 0 disables early stopping."
+      uncertainty_weighting:
+        type: boolean
+        description: "Enable learnable uncertainty-based loss weighting (Kendall et al., CVPR 2018). Learns per-task homoscedastic uncertainty parameters that automatically balance losses."
+      loss_weights:
+        type: object
+        description: "Manual per-task loss weight multipliers. Keys are task names, values are floats (default 1.0)."
+        patternProperties:
+          "^[a-z0-9_]+$":
+            type: number
+            minimum: 0
+        additionalProperties: false
       tasks:
         type: array
         description: "Task names to include in this multitask run"

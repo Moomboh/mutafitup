@@ -1450,6 +1450,26 @@ train:
     lora_alpha: 16
     tasks: *gpsite_all_tasks
 
+  - id: esmc_300m_all_uw_r4
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#ffe119'
+    lora_rank: 4
+    lora_alpha: 4
+    uncertainty_weighting: true
+    tasks: *all_tasks
+
+  - id: esmc_300m_all_uw_r16
+    <<: *default_hyperparams
+    max_validations: 100
+    checkpoint: esmc_300m
+    color: '#ffd8b1'
+    lora_rank: 16
+    lora_alpha: 16
+    uncertainty_weighting: true
+    tasks: *all_tasks
+
   align_lora:
   # --- ESM-C 300M Align LoRA runs ---
   - id: esmc_300m_all_r4

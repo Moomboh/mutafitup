@@ -119,6 +119,7 @@ early_stopping_metrics = snakemake.params["early_stopping_metrics"]
 primary_metrics = snakemake.params["primary_metrics"]
 training_checkpoint_dir = snakemake.params["training_checkpoint_dir"]
 checkpoint_every_n_validations = snakemake.params["checkpoint_every_n_validations"]
+uncertainty_weighting = snakemake.params.get("uncertainty_weighting", False)
 align_lora_kl_lambda = snakemake.params["align_lora_kl_lambda"]
 gradient_checkpointing = snakemake.params["gradient_checkpointing"]
 
@@ -199,6 +200,7 @@ model, history, best_checkpoints = train_multitask_align_lora(
     best_loss_overall_model_dir=snakemake.output["best_loss_overall_model"],
     best_loss_task_models_dir=snakemake.output["best_loss_task_models"],
     auto_mixed_precision=auto_mixed_precision,
+    uncertainty_weighting=uncertainty_weighting,
 )
 
 logger.info("Training complete (MultitaskModel align_lora)")

@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Protocol, Tuple
 import torch
 
 from mutafitup.models.multitask_model import MultitaskModel
+from mutafitup.models.uncertainty_loss_weights import UncertaintyLossWeights
 
 from .utils import AlignLoraContext
 
@@ -23,6 +24,52 @@ def _sum_losses(task_losses: List[torch.Tensor], device: torch.device) -> torch.
     for loss in task_losses[1:]:
         result = result + loss
     return result
+
+
+def _setup_uncertainty_weights(
+    model: MultitaskModel, task_names: List[str]
+) -> Optional[UncertaintyLossWeights]:
+    """Create and attach UncertaintyLossWeights to the model."""
+    problem_types = {
+        name: model.head_configs[name].problem_type for name in task_names
+    }
+    weights = UncertaintyLossWeights(
+        task_names=task_names, problem_types=problem_types
+    )
+    # Move to same device as model
+    device = next(model.parameters()).device
+    weights = weights.to(device)
+    model.uncertainty_loss_weights = weights
+    return weights
+
+
+def _apply_uncertainty_weighting(
+    ulw: Optional[UncertaintyLossWeights],
+    loss: torch.Tensor,
+    task_name: str,
+) -> torch.Tensor:
+    """Apply uncertainty weighting if active, otherwise return loss unchanged."""
+    if ulw is not None:
+        return ulw(loss, task_name)
+    return loss
+
+
+def _uncertainty_history_data(
+    ulw: Optional[UncertaintyLossWeights],
+) -> Dict[str, Any]:
+    """Return current uncertainty log-var values for history logging."""
+    if ulw is None:
+        return {}
+    data: Dict[str, Any] = {}
+    for name, param in ulw.log_vars.items():
+        log_var = param.item()
+        data[f"uncertainty_log_var_{name}"] = log_var
+        # Effective weight: exp(-s) for classification, 0.5*exp(-s) for regression
+        if ulw.problem_types[name] == "regression":
+            data[f"uncertainty_weight_{name}"] = 0.5 * torch.exp(-param).item()
+        else:
+            data[f"uncertainty_weight_{name}"] = torch.exp(-param).item()
+    return data
 
 
 class TrainingStrategy(Protocol):
@@ -126,12 +173,18 @@ class HeadsOnlyStrategy:
     Does not accumulate gradients across tasks.
     """
 
+    uncertainty_weighting: bool = False
     use_embedding_cache: bool = True
     accumulate_across_tasks: bool = False
     accumulate_requires_combined_backward: bool = False
 
+    _ulw: Optional[UncertaintyLossWeights] = field(
+        default=None, init=False, repr=False
+    )
+
     def setup(self, model: MultitaskModel, task_names: List[str]) -> None:
-        pass
+        if self.uncertainty_weighting:
+            self._ulw = _setup_uncertainty_weights(model, task_names)
 
     def teardown(self) -> None:
         pass
@@ -151,7 +204,7 @@ class HeadsOnlyStrategy:
     def process_loss(
         self, loss: torch.Tensor, task_name: str, num_tasks: int
     ) -> torch.Tensor:
-        return loss
+        return _apply_uncertainty_weighting(self._ulw, loss, task_name)
 
     def combine_losses(
         self, task_losses: List[torch.Tensor], device: torch.device
@@ -165,10 +218,12 @@ class HeadsOnlyStrategy:
         return result
 
     def get_extra_checkpointing_params(self) -> Dict[str, Any]:
+        if self.uncertainty_weighting:
+            return {"uncertainty_weighting": True}
         return {}
 
     def get_extra_history_data(self) -> Dict[str, Any]:
-        return {}
+        return _uncertainty_history_data(self._ulw)
 
     def get_checkpoint_data(self) -> Tuple[Optional[float], Optional[int]]:
         return None, None
@@ -186,12 +241,18 @@ class LoRAStrategy:
     Does not accumulate gradients across tasks.
     """
 
+    uncertainty_weighting: bool = False
     use_embedding_cache: bool = False
     accumulate_across_tasks: bool = False
     accumulate_requires_combined_backward: bool = False
 
+    _ulw: Optional[UncertaintyLossWeights] = field(
+        default=None, init=False, repr=False
+    )
+
     def setup(self, model: MultitaskModel, task_names: List[str]) -> None:
-        pass
+        if self.uncertainty_weighting:
+            self._ulw = _setup_uncertainty_weights(model, task_names)
 
     def teardown(self) -> None:
         pass
@@ -211,7 +272,7 @@ class LoRAStrategy:
     def process_loss(
         self, loss: torch.Tensor, task_name: str, num_tasks: int
     ) -> torch.Tensor:
-        return loss
+        return _apply_uncertainty_weighting(self._ulw, loss, task_name)
 
     def combine_losses(
         self, task_losses: List[torch.Tensor], device: torch.device
@@ -220,10 +281,12 @@ class LoRAStrategy:
         return _sum_losses(task_losses, device)
 
     def get_extra_checkpointing_params(self) -> Dict[str, Any]:
+        if self.uncertainty_weighting:
+            return {"uncertainty_weighting": True}
         return {}
 
     def get_extra_history_data(self) -> Dict[str, Any]:
-        return {}
+        return _uncertainty_history_data(self._ulw)
 
     def get_checkpoint_data(self) -> Tuple[Optional[float], Optional[int]]:
         return None, None
@@ -241,12 +304,18 @@ class AccGradLoRAStrategy:
     Divides each task's loss by number of tasks for proper scaling.
     """
 
+    uncertainty_weighting: bool = False
     use_embedding_cache: bool = False
     accumulate_across_tasks: bool = True
     accumulate_requires_combined_backward: bool = False
 
+    _ulw: Optional[UncertaintyLossWeights] = field(
+        default=None, init=False, repr=False
+    )
+
     def setup(self, model: MultitaskModel, task_names: List[str]) -> None:
-        pass
+        if self.uncertainty_weighting:
+            self._ulw = _setup_uncertainty_weights(model, task_names)
 
     def teardown(self) -> None:
         pass
@@ -266,6 +335,7 @@ class AccGradLoRAStrategy:
     def process_loss(
         self, loss: torch.Tensor, task_name: str, num_tasks: int
     ) -> torch.Tensor:
+        loss = _apply_uncertainty_weighting(self._ulw, loss, task_name)
         return loss / num_tasks
 
     def combine_losses(
@@ -274,10 +344,12 @@ class AccGradLoRAStrategy:
         return _sum_losses(task_losses, device)
 
     def get_extra_checkpointing_params(self) -> Dict[str, Any]:
+        if self.uncertainty_weighting:
+            return {"uncertainty_weighting": True}
         return {}
 
     def get_extra_history_data(self) -> Dict[str, Any]:
-        return {}
+        return _uncertainty_history_data(self._ulw)
 
     def get_checkpoint_data(self) -> Tuple[Optional[float], Optional[int]]:
         return None, None
@@ -294,6 +366,7 @@ class AlignLoRAStrategy:
     that encourages LoRA representations to be similar across tasks.
     """
 
+    uncertainty_weighting: bool = False
     align_lora_kl_lambda: float = 0.01
     gradient_checkpointing: bool = False
     use_embedding_cache: bool = False
@@ -301,6 +374,9 @@ class AlignLoRAStrategy:
     accumulate_requires_combined_backward: bool = True
 
     # Internal state
+    _ulw: Optional[UncertaintyLossWeights] = field(
+        default=None, init=False, repr=False
+    )
     _context: Optional[AlignLoraContext] = field(default=None, init=False, repr=False)
     _task_names: List[str] = field(default_factory=list, init=False, repr=False)
     _total_kl_loss: float = field(default=0.0, init=False, repr=False)
@@ -314,6 +390,8 @@ class AlignLoRAStrategy:
         if len(task_names) < 2:
             raise ValueError("align_lora_kl requires at least two tasks")
         self._task_names = task_names
+        if self.uncertainty_weighting:
+            self._ulw = _setup_uncertainty_weights(model, task_names)
         self._context = AlignLoraContext(model, task_names, align_lora_kl=True)
         self._total_kl_loss = 0.0
         self._total_kl_steps = 0
@@ -344,6 +422,7 @@ class AlignLoRAStrategy:
     def process_loss(
         self, loss: torch.Tensor, task_name: str, num_tasks: int
     ) -> torch.Tensor:
+        loss = _apply_uncertainty_weighting(self._ulw, loss, task_name)
         return loss / num_tasks
 
     def combine_losses(
@@ -360,10 +439,13 @@ class AlignLoRAStrategy:
         return combined
 
     def get_extra_checkpointing_params(self) -> Dict[str, Any]:
-        return {
+        params: Dict[str, Any] = {
             "align_lora_kl": True,
             "align_lora_kl_lambda": self.align_lora_kl_lambda,
         }
+        if self.uncertainty_weighting:
+            params["uncertainty_weighting"] = True
+        return params
 
     def get_extra_history_data(self) -> Dict[str, Any]:
         avg_kl = (
@@ -371,7 +453,9 @@ class AlignLoRAStrategy:
             if self._total_kl_steps > 0
             else 0.0
         )
-        return {"align_lora_kl_loss": avg_kl}
+        data: Dict[str, Any] = {"align_lora_kl_loss": avg_kl}
+        data.update(_uncertainty_history_data(self._ulw))
+        return data
 
     def get_checkpoint_data(self) -> Tuple[Optional[float], Optional[int]]:
         return self._total_kl_loss, self._total_kl_steps

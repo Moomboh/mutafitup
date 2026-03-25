@@ -39,6 +39,7 @@ def train_multitask_lora(
     best_loss_overall_model_dir: Optional[str] = None,
     best_loss_task_models_dir: Optional[str] = None,
     auto_mixed_precision: bool = False,
+    uncertainty_weighting: bool = False,
 ) -> Tuple[MultitaskModel, List[Dict], Dict[str, Any]]:
     """Train a multitask model using LoRA fine-tuning.
 
@@ -73,7 +74,7 @@ def train_multitask_lora(
     Returns:
         Tuple of (trained_model, history, best_checkpoints).
     """
-    strategy = LoRAStrategy()
+    strategy = LoRAStrategy(uncertainty_weighting=uncertainty_weighting)
     trainer = MultitaskTrainer(
         strategy=strategy,
         model=model,
