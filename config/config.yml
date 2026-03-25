@@ -78,57 +78,57 @@ standardized_datasets:
     subloc:
       color: '#3cb44b'
       num_labels: 10
-      primary_metric: accuracy
+      primary_metric: mcc
 
   per_residue_classification:
     secstr:
       color: '#4363d8'
       num_labels: 3
-      primary_metric: accuracy
+      primary_metric: mcc
     secstr8:
       color: '#f58231'
       num_labels: 8
-      primary_metric: accuracy
+      primary_metric: mcc
     gpsite_dna:
       color: '#f032e6'
       num_labels: 2
-      primary_metric: accuracy
+      primary_metric: mcc
     gpsite_rna:
       color: '#008080'
       num_labels: 2
-      primary_metric: accuracy
+      primary_metric: mcc
     gpsite_pep:
       color: '#9a6324'
       num_labels: 2
-      primary_metric: accuracy
+      primary_metric: mcc
     gpsite_pro:
       color: '#800000'
       num_labels: 2
-      primary_metric: accuracy
+      primary_metric: mcc
     gpsite_atp:
       color: '#bcf60c'
       num_labels: 2
-      primary_metric: accuracy
+      primary_metric: mcc
     gpsite_hem:
       color: '#fabebe'
       num_labels: 2
-      primary_metric: accuracy
+      primary_metric: mcc
     gpsite_zn:
       color: '#808000'
       num_labels: 2
-      primary_metric: accuracy
+      primary_metric: mcc
     gpsite_ca:
       color: '#000075'
       num_labels: 2
-      primary_metric: accuracy
+      primary_metric: mcc
     gpsite_mg:
       color: '#aaffc3'
       num_labels: 2
-      primary_metric: accuracy
+      primary_metric: mcc
     gpsite_mn:
       color: '#e6beff'
       num_labels: 2
-      primary_metric: accuracy
+      primary_metric: mcc
 
   per_residue_regression:
     disorder:
