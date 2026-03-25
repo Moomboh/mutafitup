@@ -1477,25 +1477,10 @@ train:
     color: '#ffe119'
     lora_rank: 4
     lora_alpha: 4
-    tasks: &all_tasks_late_pool
-    - secstr
-    - secstr8
-    - disorder
-    - rsa
-    - name: meltome
-      head_variant: late_pool
-    - name: subloc
-      head_variant: late_pool
-    - gpsite_dna
-    - gpsite_rna
-    - gpsite_pep
-    - gpsite_pro
-    - gpsite_atp
-    - gpsite_hem
-    - gpsite_zn
-    - gpsite_ca
-    - gpsite_mg
-    - gpsite_mn
+    tasks: *all_tasks
+    head_variants: &late_pool_variants
+      meltome: late_pool
+      subloc: late_pool
 
   - id: esmc_300m_all_lp_r16
     <<: *default_hyperparams
@@ -1504,7 +1489,8 @@ train:
     color: '#ffd8b1'
     lora_rank: 16
     lora_alpha: 16
-    tasks: *all_tasks_late_pool
+    tasks: *all_tasks
+    head_variants: *late_pool_variants
 
   - id: esmc_300m_all_uw_lp_r4
     <<: *default_hyperparams
@@ -1514,7 +1500,8 @@ train:
     lora_rank: 4
     lora_alpha: 4
     uncertainty_weighting: true
-    tasks: *all_tasks_late_pool
+    tasks: *all_tasks
+    head_variants: *late_pool_variants
 
   - id: esmc_300m_all_uw_lp_r16
     <<: *default_hyperparams
@@ -1524,7 +1511,8 @@ train:
     lora_rank: 16
     lora_alpha: 16
     uncertainty_weighting: true
-    tasks: *all_tasks_late_pool
+    tasks: *all_tasks
+    head_variants: *late_pool_variants
 
   align_lora:
   # --- ESM-C 300M Align LoRA runs ---

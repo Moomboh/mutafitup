@@ -670,25 +670,18 @@ definitions:
         type: array
         description: "Task names to include in this multitask run"
         items:
-          oneOf:
-            - type: string
-              pattern: "^[a-z0-9_]+$"
-              description: "Task name (must match a standardized dataset name)"
-            - type: object
-              description: "Task with additional configuration"
-              properties:
-                name:
-                  type: string
-                  pattern: "^[a-z0-9_]+$"
-                  description: "Task name (must match a standardized dataset name)"
-                head_variant:
-                  type: string
-                  enum: ["default", "late_pool"]
-                  description: "Per-protein head variant. 'late_pool' applies a hidden layer before mean pooling."
-              required:
-                - name
-              additionalProperties: false
+          type: string
+          pattern: "^[a-z0-9_]+$"
+          description: "Task name (must match a standardized dataset name)"
         minItems: 1
+      head_variants:
+        type: object
+        description: "Per-task head variant overrides. Keys are task names, values are variant names. Only relevant for per_protein_* tasks."
+        patternProperties:
+          "^[a-z0-9_]+$":
+            type: string
+            enum: ["default", "late_pool"]
+        additionalProperties: false
     required:
       - id
       - checkpoint

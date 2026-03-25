@@ -40,8 +40,10 @@ def build_multitask_model(
     backbone: MultitaskBackbone,
     dropout: float,
     tasks,
+    head_variants=None,
 ) -> MultitaskModel:
     hidden_size = backbone.hidden_size  # type: ignore[attr-defined]
+    head_variants = head_variants or {}
 
     heads = {}
 
@@ -74,7 +76,7 @@ def build_multitask_model(
                 raise ValueError(
                     f"num_labels is required for classification task '{name}'"
                 )
-            head_variant = task.get("head_variant", "default")
+            head_variant = head_variants.get(name, "default")
             if head_variant == "late_pool":
                 head_cls = PerProteinLatePoolClassificationHead
             else:
@@ -87,7 +89,7 @@ def build_multitask_model(
                 level="per_protein",
             )
         elif subset_type == "per_protein_regression":
-            head_variant = task.get("head_variant", "default")
+            head_variant = head_variants.get(name, "default")
             if head_variant == "late_pool":
                 head_cls = PerProteinLatePoolRegressionHead
             else:
@@ -128,7 +130,8 @@ backbone, tokenizer = build_backbone_and_tokenizer(
     None,
     None,
 )
-model = build_multitask_model(backbone, dropout, tasks)
+head_variants = snakemake.params.get("head_variants", {})
+model = build_multitask_model(backbone, dropout, tasks, head_variants)
 
 task_datasets = {}
 
