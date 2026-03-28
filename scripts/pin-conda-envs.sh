@@ -42,7 +42,7 @@ for envfile in "${ENV_FILES[@]}"; do
         # Use --with-cuda for linux-64, --without-cuda for osx-arm64
         cuda_flag=""
         if [[ "$platform" == "linux-64" ]]; then
-            cuda_flag="--with-cuda=12.6"
+            cuda_flag="--with-cuda=12.1"
         else
             cuda_flag="--without-cuda"
         fi
