@@ -13,4 +13,5 @@ dependencies:
   - sentencepiece>=0.2.1
   - matplotlib>=3.10.8
   - torchmetrics>=1.8.2
+  - libstdcxx-ng>=13.2
   - pip
