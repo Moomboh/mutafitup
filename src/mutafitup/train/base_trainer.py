@@ -433,6 +433,10 @@ class MultitaskTrainer:
         self.early_stopping_triggered = False
         self.stop_reason: Optional[str] = None
 
+        # Setup strategy-specific state (e.g. uncertainty loss weights) before
+        # checkpoint loading, so the model has the right modules for load_state_dict.
+        self.strategy.setup(self.model, self.task_names)
+
         # Checkpoint path for history entries
         self.training_checkpoint_path = None
         if self.training_checkpoint_dir is not None:
@@ -625,11 +629,8 @@ class MultitaskTrainer:
                 if name in self.batches:
                     self.batches[name] = int(val)
 
-        # Setup strategy-specific state
-        self.strategy.setup(self.model, self.task_names)
-
-        # Restore strategy-specific state from checkpoint (must be after setup()
-        # so that setup() initializes state before we override with checkpoint values)
+        # Restore strategy-specific state from checkpoint (strategy.setup() already
+        # ran in __init__ before checkpoint loading, so state is initialized)
         if resumed_checkpoint_data is not None:
             self.strategy.restore_from_checkpoint(resumed_checkpoint_data)
 
